@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "C:\\Users\\MoonRivers\\.config\\herd\\bin\\php85\\php.exe",
+            "args": [
+                "D:\\VibeCode Project\\vet-clinic-sys\\artisan",
+                "boost:mcp"
+            ]
+        }
+    }
+}
