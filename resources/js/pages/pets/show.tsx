@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
 import pets from '@/routes/pets';
 import clientsRoute from '@/routes/clients';
-import medicalRecords from '@/routes/medical-records';
+import medicalRecordsRoute from '@/routes/medical-records';
 import { formatDate } from '@/lib/utils';
 
 interface PetShowProps {
@@ -156,7 +156,7 @@ export default function PetShow({ pet, medicalRecords }: PetShowProps) {
                                                 <td className="py-3 text-muted-foreground">{record.veterinarian.name}</td>
                                                 <td className="py-3 text-muted-foreground max-w-xs truncate">{record.assessment ?? '—'}</td>
                                                 <td className="py-3 text-right">
-                                                    <Link href={medicalRecords.show(record.id)}>
+                                                    <Link href={medicalRecordsRoute.show(record.id)}>
                                                         <Button variant="ghost" size="sm">View</Button>
                                                     </Link>
                                                 </td>
