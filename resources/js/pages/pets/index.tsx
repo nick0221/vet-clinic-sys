@@ -3,6 +3,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DatePicker } from '@/components/date-picker';
 import {
     Dialog,
     DialogContent,
@@ -15,6 +16,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { dashboard } from '@/routes';
 import clientsRoute from '@/routes/clients';
 import pets from '@/routes/pets';
@@ -63,7 +71,30 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
     const [searchValue, setSearchValue] = React.useState(filters?.search ?? '');
     const [createOpen, setCreateOpen] = React.useState(false);
     const [editingPet, setEditingPet] = React.useState<Pet | null>(null);
+    const [createSpecies, setCreateSpecies] = React.useState('');
+    const [editSpecies, setEditSpecies] = React.useState('');
+    const [createCustomSpecies, setCreateCustomSpecies] = React.useState(false);
+    const [createCustomSpeciesInput, setCreateCustomSpeciesInput] = React.useState('');
+    const [editCustomSpecies, setEditCustomSpecies] = React.useState(false);
+    const [editCustomSpeciesInput, setEditCustomSpeciesInput] = React.useState('');
+    const [createDob, setCreateDob] = React.useState<Date | undefined>();
+    const [editDob, setEditDob] = React.useState<Date | undefined>();
     const { errors } = usePage().props;
+
+    const commonSpecies = [
+        'Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Hamster',
+        'Guinea Pig', 'Turtle', 'Snake', 'Lizard', 'Horse', 'Ferret',
+    ];
+
+    React.useEffect(() => {
+        if (editingPet) {
+            const species = editingPet.species;
+            const isCommon = commonSpecies.map(s => s.toLowerCase()).includes(species.toLowerCase());
+            setEditSpecies(species);
+            setEditCustomSpecies(!isCommon);
+            setEditDob(editingPet.date_of_birth ? new Date(editingPet.date_of_birth) : undefined);
+        }
+    }, [editingPet]);
 
     function formToJson(form: HTMLFormElement) {
         const data = new FormData(form);
@@ -78,7 +109,13 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
         e.preventDefault();
         const values = formToJson(e.currentTarget);
         router.post(pets.store.url(), values, {
-            onSuccess: () => setCreateOpen(false),
+            onSuccess: () => {
+                setCreateOpen(false);
+                setCreateSpecies('');
+                setCreateCustomSpecies(false);
+                setCreateCustomSpeciesInput('');
+                setCreateDob(undefined);
+            },
             onError: () => {},
         });
     }
@@ -130,7 +167,15 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
                                 </Button>
                             )}
                         </div>
-                        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+                        <Dialog open={createOpen} onOpenChange={(open) => {
+                            setCreateOpen(open);
+                            if (open) {
+                                setCreateSpecies('');
+                                setCreateCustomSpecies(false);
+                                setCreateCustomSpeciesInput('');
+                                setCreateDob(undefined);
+                            }
+                        }}>
                             <DialogTrigger asChild>
                                 <Button>
                                     <Plus /> Add Pet
@@ -168,7 +213,38 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
                                             </div>
                                             <div className="grid gap-2">
                                                 <Label htmlFor="species">Species</Label>
-                                                <Input id="species" name="species" required placeholder="dog, cat, bird..." />
+                                                <input type="hidden" name="species" value={createCustomSpecies ? createCustomSpeciesInput : createSpecies} />
+                                                <Select
+                                                    value={createCustomSpecies ? 'other' : createSpecies}
+                                                    onValueChange={(val) => {
+                                                        if (val === 'other') {
+                                                            setCreateCustomSpecies(true);
+                                                            setCreateSpecies('other');
+                                                        } else {
+                                                            setCreateCustomSpecies(false);
+                                                            setCreateSpecies(val);
+                                                        }
+                                                    }}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select species..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {commonSpecies.map((s) => (
+                                                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                                                        ))}
+                                                        <SelectItem value="other">Other...</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                {createCustomSpecies && (
+                                                    <Input
+                                                        placeholder="Type species name..."
+                                                        value={createCustomSpeciesInput}
+                                                        onChange={(e) => setCreateCustomSpeciesInput(e.target.value)}
+                                                        className="mt-1"
+                                                        autoFocus
+                                                    />
+                                                )}
                                                 {errors.species && <p className="text-sm text-destructive">{errors.species}</p>}
                                             </div>
                                         </div>
@@ -194,8 +270,13 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
                                         </div>
                                         <div className="grid grid-cols-3 gap-4">
                                             <div className="grid gap-2">
-                                                <Label htmlFor="date_of_birth">Date of Birth</Label>
-                                                <Input id="date_of_birth" name="date_of_birth" type="date" />
+                                                <Label>Date of Birth</Label>
+                                                <DatePicker
+                                                    value={createDob}
+                                                    onChange={(date) => setCreateDob(date)}
+                                                    name="date_of_birth"
+                                                    id="date_of_birth"
+                                                />
                                                 {errors.date_of_birth && <p className="text-sm text-destructive">{errors.date_of_birth}</p>}
                                             </div>
                                             <div className="grid gap-2">
@@ -271,7 +352,38 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="edit-species">Species</Label>
-                                            <Input id="edit-species" name="species" defaultValue={editingPet.species} required placeholder="dog, cat, bird..." />
+                                            <input type="hidden" name="species" value={editCustomSpecies ? editCustomSpeciesInput : editSpecies} />
+                                            <Select
+                                                value={editCustomSpecies ? 'other' : editSpecies}
+                                                onValueChange={(val) => {
+                                                    if (val === 'other') {
+                                                        setEditCustomSpecies(true);
+                                                        setEditSpecies('other');
+                                                    } else {
+                                                        setEditCustomSpecies(false);
+                                                        setEditSpecies(val);
+                                                    }
+                                                }}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select species..." />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {commonSpecies.map((s) => (
+                                                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                                                    ))}
+                                                    <SelectItem value="other">Other...</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            {editCustomSpecies && (
+                                                <Input
+                                                    placeholder="Type species name..."
+                                                    value={editCustomSpeciesInput}
+                                                    onChange={(e) => setEditCustomSpeciesInput(e.target.value)}
+                                                    className="mt-1"
+                                                    autoFocus
+                                                />
+                                            )}
                                             {errors.species && <p className="text-sm text-destructive">{errors.species}</p>}
                                         </div>
                                     </div>
@@ -298,8 +410,13 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
                                     </div>
                                     <div className="grid grid-cols-3 gap-4">
                                         <div className="grid gap-2">
-                                            <Label htmlFor="edit-date_of_birth">Date of Birth</Label>
-                                            <Input id="edit-date_of_birth" name="date_of_birth" type="date" defaultValue={editingPet.date_of_birth ?? ''} />
+                                            <Label>Date of Birth</Label>
+                                            <DatePicker
+                                                value={editDob}
+                                                onChange={(date) => setEditDob(date)}
+                                                name="date_of_birth"
+                                                id="edit-date_of_birth"
+                                            />
                                             {errors.date_of_birth && <p className="text-sm text-destructive">{errors.date_of_birth}</p>}
                                         </div>
                                         <div className="grid gap-2">
