@@ -28,12 +28,12 @@ function Calendar({
                     buttonVariants({ variant: 'outline' }),
                     'absolute right-0 top-0 size-7 bg-transparent p-0 opacity-50 hover:opacity-100',
                 ),
-                table: 'w-full border-collapse',
-                head_row: 'grid grid-cols-7',
-                head_cell: 'text-muted-foreground rounded-md font-normal text-[0.8rem] flex items-center justify-center',
-                row: 'grid grid-cols-7 mt-2',
+                table: 'w-full border-collapse table-fixed',
+                head_row: '',
+                head_cell: 'text-muted-foreground rounded-md font-normal text-[0.8rem] text-center',
+                row: '',
                 cell: cn(
-                    'relative p-0 text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-range-end)]:rounded-r-md flex items-center justify-center',
+                    'relative p-0 text-sm text-center focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-range-end)]:rounded-r-md',
                     props.mode === 'range'
                         ? '[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md'
                         : '[&:has([aria-selected])]:rounded-md',
