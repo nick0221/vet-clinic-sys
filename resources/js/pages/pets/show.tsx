@@ -40,7 +40,7 @@ interface PetShowProps {
     }>;
 }
 
-export default function PetShow({ pet }: PetShowProps) {
+export default function PetShow({ pet, medicalRecords }: PetShowProps) {
     return (
         <>
             <Head title={pet.name} />
