@@ -1,13 +1,10 @@
 import React from 'react';
 import { Head, router } from '@inertiajs/react';
-import { Bell, CheckCheck, ChevronRight, Clock } from 'lucide-react';
+import { Bell, CheckCheck, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { dashboard } from '@/routes';
 import notificationsRoutes from '@/routes/notifications';
-import type { BreadcrumbItem } from '@/types';
-import AppLayout from '@/layouts/app-layout';
 
 type NotificationItem = {
     id: string;
@@ -36,11 +33,6 @@ export default function NotificationsIndex({
 }: {
     notifications: PaginatedNotifications;
 }) {
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: dashboard() },
-        { title: 'Notifications', href: notificationsRoutes.index().url },
-    ];
-
     const handleMarkAsRead = (id: string) => {
         router.post(notificationsRoutes.read({ id }).url);
     };
@@ -65,9 +57,8 @@ export default function NotificationsIndex({
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title="Notifications" />
-
             <div className="flex flex-col gap-6 p-4 md:p-8">
                 <div className="flex items-center justify-between">
                     <div>
@@ -176,6 +167,6 @@ export default function NotificationsIndex({
                     </CardContent>
                 </Card>
             </div>
-        </AppLayout>
+        </>
     );
 }
