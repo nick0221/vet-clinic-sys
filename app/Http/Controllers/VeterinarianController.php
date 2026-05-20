@@ -4,13 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreVeterinarianRequest;
 use App\Http\Requests\UpdateVeterinarianRequest;
-use App\Models\Appointment;
-use App\Models\LabRequest;
-use App\Models\MedicalRecord;
-use App\Models\Prescription;
-use App\Models\Surgery;
 use App\Models\User;
-use App\Models\Vaccination;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;

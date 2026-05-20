@@ -108,6 +108,6 @@ class VeterinarianSeeder extends Seeder
             }
         }
 
-        $this->command->info('Created ' . count($vets) . ' sample veterinarians.');
+        $this->command->info('Created '.count($vets).' sample veterinarians.');
     }
 }
