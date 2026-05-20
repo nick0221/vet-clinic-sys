@@ -2,6 +2,18 @@
 
 namespace App\Providers;
 
+use App\Models\Appointment;
+use App\Models\Client;
+use App\Models\InventoryItem;
+use App\Models\Invoice;
+use App\Models\LabRequest;
+use App\Models\LabTest;
+use App\Models\MedicalRecord;
+use App\Models\Pet;
+use App\Models\Prescription;
+use App\Models\Surgery;
+use App\Models\Vaccination;
+use App\Observers\ActivityObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->registerObservers();
     }
 
     /**
@@ -46,5 +59,26 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    protected function registerObservers(): void
+    {
+        $models = [
+            Client::class,
+            Pet::class,
+            Appointment::class,
+            MedicalRecord::class,
+            Vaccination::class,
+            Prescription::class,
+            Invoice::class,
+            InventoryItem::class,
+            LabTest::class,
+            LabRequest::class,
+            Surgery::class,
+        ];
+
+        foreach ($models as $model) {
+            $model::observe(ActivityObserver::class);
+        }
     }
 }

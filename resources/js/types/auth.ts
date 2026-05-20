@@ -1,3 +1,10 @@
+export type Role = {
+    id: number;
+    name: string;
+    guard_name: string;
+    pivot: { model_id: number; model_type: string };
+};
+
 export type User = {
     id: number;
     name: string;
@@ -7,6 +14,7 @@ export type User = {
     two_factor_enabled?: boolean;
     created_at: string;
     updated_at: string;
+    roles: Role[];
     [key: string]: unknown;
 };
 

@@ -17,6 +17,7 @@ test('security page is displayed', function () {
     ]);
 
     $user = User::factory()->create();
+    $user->assignRole('Admin');
 
     $this->actingAs($user)
         ->withSession(['auth.password_confirmed_at' => time()])
@@ -52,6 +53,7 @@ test('security page renders without two factor when feature is disabled', functi
     config(['fortify.features' => []]);
 
     $user = User::factory()->create();
+    $user->assignRole('Admin');
 
     $this->actingAs($user)
         ->withSession(['auth.password_confirmed_at' => time()])
@@ -69,6 +71,7 @@ test('security page renders without two factor when feature is disabled', functi
 
 test('password can be updated', function () {
     $user = User::factory()->create();
+    $user->assignRole('Admin');
 
     $response = $this
         ->actingAs($user)
