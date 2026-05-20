@@ -1,7 +1,7 @@
 import React from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 
-import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Clock, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -131,6 +131,14 @@ export default function AppointmentsIndex({ appointments: data, veterinarians, p
         if (m < 1) { m = 12; y--; }
         if (m > 12) { m = 1; y++; }
         navigate({ cal_month: m, cal_year: y, status: filters?.status, search: filters?.search, date_from: filters?.date_from, date_to: filters?.date_to });
+    }
+
+    function goToday() {
+        const now = new Date();
+        const m = now.getMonth() + 1;
+        const y = now.getFullYear();
+        const todayStr = now.toISOString().slice(0, 10);
+        navigate({ cal_month: m, cal_year: y, date_from: todayStr, date_to: todayStr, status: filters?.status, search: filters?.search });
     }
 
     function pickDate(dateStr: string) {
@@ -298,6 +306,7 @@ export default function AppointmentsIndex({ appointments: data, veterinarians, p
                             <div className="flex items-center justify-between">
                                 <CardTitle className="text-base">{MONTHS[calendarMonth - 1]} {calendarYear}</CardTitle>
                                 <div className="flex gap-1">
+                                    <Button variant="outline" size="sm" className="h-7 text-xs px-2" onClick={goToday}>Today</Button>
                                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => goMonth(-1)}><ChevronLeft /></Button>
                                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => goMonth(1)}><ChevronRight /></Button>
                                 </div>
@@ -344,6 +353,49 @@ export default function AppointmentsIndex({ appointments: data, veterinarians, p
                                 )}
                             </div>
                         </div>
+
+                        {activeDate && data.data.length > 0 && (
+                            <Card>
+                                <CardHeader className="pb-3">
+                                    <div className="flex items-center gap-2">
+                                        <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                                        <CardTitle className="text-base">Day Agenda — {activeDate}</CardTitle>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="pt-0">
+                                    <div className="space-y-0">
+                                        {data.data.map((apt, i) => {
+                                            const time = apt.date_time.includes('T') ? apt.date_time.split('T')[1].slice(0, 5) : '';
+                                            return (
+                                                <div key={apt.id} className="relative flex gap-4 pb-4 pl-8 last:pb-0">
+                                                    {i < data.data.length - 1 && (
+                                                        <div className="absolute left-[13px] top-6 h-full w-px bg-border" />
+                                                    )}
+                                                    <div className={`absolute left-0 top-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 text-[10px] font-bold
+                                                        ${apt.status === 'completed' ? 'border-green-500 bg-green-50 text-green-700' :
+                                                          apt.status === 'cancelled' || apt.status === 'no_show' ? 'border-red-500 bg-red-50 text-red-700' :
+                                                          apt.status === 'in_progress' ? 'border-blue-500 bg-blue-50 text-blue-700' :
+                                                          'border-muted-foreground/30 bg-background text-muted-foreground'}`}>
+                                                        <Clock className="h-3 w-3" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <p className="text-sm font-medium truncate">{apt.pet.name}</p>
+                                                            <div className="flex items-center gap-2 shrink-0">
+                                                                {time && <span className="text-xs text-muted-foreground">{time}</span>}
+                                                                <Badge variant={statusColors[apt.status] ?? 'outline'} className="text-[10px] px-1.5 py-0">{apt.status.replace('_', ' ')}</Badge>
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-xs text-muted-foreground truncate">{apt.reason}</p>
+                                                        <p className="text-xs text-muted-foreground">{apt.client.name} · {apt.veterinarian.name}</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
 
                         <Card>
                             <CardHeader>

@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAppointmentRequest;
 use App\Http\Requests\UpdateAppointmentRequest;
+use App\Models\Activity;
 use App\Models\Appointment;
 use App\Models\Client;
+use App\Models\MedicalRecord;
 use App\Models\Pet;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -84,10 +86,24 @@ class AppointmentController extends Controller
     {
         $this->authorize('appointments.view');
 
-        $appointment->load(['pet', 'client', 'veterinarian']);
+        $appointment->load(['pet.client', 'client', 'veterinarian']);
+
+        $medicalRecords = MedicalRecord::where('pet_id', $appointment->pet_id)
+            ->with('veterinarian')
+            ->latest('visit_date')
+            ->take(5)
+            ->get();
+
+        $activity = Activity::where('subject_type', Appointment::class)
+            ->where('subject_id', $appointment->id)
+            ->with('user')
+            ->latest()
+            ->get();
 
         return Inertia::render('appointments/show', [
             'appointment' => $appointment,
+            'medicalRecords' => $medicalRecords,
+            'activity' => $activity,
         ]);
     }
 
