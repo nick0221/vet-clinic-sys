@@ -21,6 +21,14 @@ interface VeterinarianData {
     id: number;
     name: string;
     email: string;
+    phone: string | null;
+    specialization: string | null;
+    license_number: string | null;
+    bio: string | null;
+    address: string | null;
+    emergency_contact: string | null;
+    start_date: string | null;
+    notes: string | null;
 }
 
 interface PaginatedData {
@@ -31,6 +39,80 @@ interface PaginatedData {
 interface Props {
     veterinarians: PaginatedData;
     filters: { search?: string };
+}
+
+function ProfileFields({ prefix, data }: { prefix: string; data?: VeterinarianData }) {
+    const { errors } = usePage().props;
+    const id = (name: string) => `${prefix}-${name}`;
+
+    return (
+        <div className="max-h-[65vh] overflow-y-auto space-y-4 px-px">
+            <div className="grid gap-2">
+                <Label htmlFor={id('name')}>Name</Label>
+                <Input id={id('name')} name="name" defaultValue={data?.name} required />
+                {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor={id('email')}>Email</Label>
+                <Input id={id('email')} name="email" type="email" defaultValue={data?.email} required />
+                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor={id('phone')}>Phone</Label>
+                <Input id={id('phone')} name="phone" defaultValue={data?.phone ?? ''} />
+                {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor={id('specialization')}>Specialization</Label>
+                <Input id={id('specialization')} name="specialization" defaultValue={data?.specialization ?? ''} placeholder="e.g. Small Animal, Surgery, Dentistry" />
+                {errors.specialization && <p className="text-sm text-destructive">{errors.specialization}</p>}
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor={id('license_number')}>License Number</Label>
+                <Input id={id('license_number')} name="license_number" defaultValue={data?.license_number ?? ''} />
+                {errors.license_number && <p className="text-sm text-destructive">{errors.license_number}</p>}
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor={id('start_date')}>Start Date</Label>
+                <Input id={id('start_date')} name="start_date" type="date" defaultValue={data?.start_date ?? ''} />
+                {errors.start_date && <p className="text-sm text-destructive">{errors.start_date}</p>}
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor={id('emergency_contact')}>Emergency Contact</Label>
+                <Input id={id('emergency_contact')} name="emergency_contact" defaultValue={data?.emergency_contact ?? ''} />
+                {errors.emergency_contact && <p className="text-sm text-destructive">{errors.emergency_contact}</p>}
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor={id('address')}>Address</Label>
+                <textarea id={id('address')} name="address" defaultValue={data?.address ?? ''} className="border-input flex h-20 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] md:text-sm" />
+                {errors.address && <p className="text-sm text-destructive">{errors.address}</p>}
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor={id('bio')}>Bio</Label>
+                <textarea id={id('bio')} name="bio" defaultValue={data?.bio ?? ''} className="border-input flex h-24 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] md:text-sm" />
+                {errors.bio && <p className="text-sm text-destructive">{errors.bio}</p>}
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor={id('notes')}>Notes</Label>
+                <textarea id={id('notes')} name="notes" defaultValue={data?.notes ?? ''} className="border-input flex h-24 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] md:text-sm" />
+                {errors.notes && <p className="text-sm text-destructive">{errors.notes}</p>}
+            </div>
+            {!data && (
+                <div className="grid gap-2">
+                    <Label htmlFor={id('password')}>Password</Label>
+                    <Input id={id('password')} name="password" type="password" required />
+                    {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                </div>
+            )}
+            {data && (
+                <div className="grid gap-2">
+                    <Label htmlFor={id('password')}>New Password</Label>
+                    <Input id={id('password')} name="password" type="password" placeholder="Leave blank to keep current" />
+                    {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                </div>
+            )}
+        </div>
+    );
 }
 
 export default function VeterinariansIndex({ veterinarians: data, filters }: Props) {
@@ -100,23 +182,7 @@ export default function VeterinariansIndex({ veterinarians: data, filters }: Pro
                                 <DialogDescription>Create a new veterinarian account.</DialogDescription>
                             </DialogHeader>
                             <form onSubmit={handleCreateSubmit}>
-                                <div className="max-h-[65vh] overflow-y-auto space-y-4 px-px">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="name">Name</Label>
-                                        <Input id="name" name="name" required />
-                                        {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="email">Email</Label>
-                                        <Input id="email" name="email" type="email" required />
-                                        {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="password">Password</Label>
-                                        <Input id="password" name="password" type="password" required />
-                                        {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
-                                    </div>
-                                </div>
+                                <ProfileFields prefix="create" />
                                 <DialogFooter className="mt-4">
                                     <Button type="submit">Save</Button>
                                 </DialogFooter>
@@ -129,7 +195,7 @@ export default function VeterinariansIndex({ veterinarians: data, filters }: Pro
                     <div className="relative flex-1 max-w-sm">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search by name or email..."
+                            placeholder="Search by name, email, phone..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="pl-8"
@@ -151,23 +217,7 @@ export default function VeterinariansIndex({ veterinarians: data, filters }: Pro
                         </DialogHeader>
                         {editingVet && (
                             <form onSubmit={handleEditSubmit} key={editingVet.id}>
-                                <div className="max-h-[65vh] overflow-y-auto space-y-4 px-px">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="edit-name">Name</Label>
-                                        <Input id="edit-name" name="name" defaultValue={editingVet.name} required />
-                                        {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="edit-email">Email</Label>
-                                        <Input id="edit-email" name="email" type="email" defaultValue={editingVet.email} required />
-                                        {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="edit-password">New Password</Label>
-                                        <Input id="edit-password" name="password" type="password" placeholder="Leave blank to keep current" />
-                                        {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
-                                    </div>
-                                </div>
+                                <ProfileFields prefix="edit" data={editingVet} />
                                 <DialogFooter className="mt-4">
                                     <Button type="submit">Save</Button>
                                 </DialogFooter>
@@ -190,6 +240,8 @@ export default function VeterinariansIndex({ veterinarians: data, filters }: Pro
                                         <tr className="border-b text-left">
                                             <th className="pb-3 font-medium">Name</th>
                                             <th className="pb-3 font-medium">Email</th>
+                                            <th className="pb-3 font-medium">Phone</th>
+                                            <th className="pb-3 font-medium">Specialization</th>
                                             <th className="pb-3 font-medium text-right">Actions</th>
                                         </tr>
                                     </thead>
@@ -200,6 +252,8 @@ export default function VeterinariansIndex({ veterinarians: data, filters }: Pro
                                                     <Link href={veterinarians.show(item.id)} className="hover:underline">{item.name}</Link>
                                                 </td>
                                                 <td className="py-3">{item.email}</td>
+                                                <td className="py-3">{item.phone ?? '—'}</td>
+                                                <td className="py-3">{item.specialization ?? '—'}</td>
                                                 <td className="py-3 text-right">
                                                     <div className="flex justify-end gap-2">
                                                         <Link href={veterinarians.show(item.id)}>

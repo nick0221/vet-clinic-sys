@@ -4,7 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreVeterinarianRequest;
 use App\Http\Requests\UpdateVeterinarianRequest;
+use App\Models\Appointment;
+use App\Models\LabRequest;
+use App\Models\MedicalRecord;
+use App\Models\Prescription;
+use App\Models\Surgery;
 use App\Models\User;
+use App\Models\Vaccination;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -21,7 +27,10 @@ class VeterinarianController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('specialization', 'like', "%{$search}%")
+                    ->orWhere('license_number', 'like', "%{$search}%");
             });
         }
 
@@ -54,6 +63,14 @@ class VeterinarianController extends Controller
         }
 
         $veterinarian->load('permissions');
+        $veterinarian->loadCount([
+            'appointments',
+            'medicalRecords',
+            'vaccinations',
+            'prescriptions',
+            'surgeries',
+            'labRequests',
+        ]);
 
         return Inertia::render('veterinarians/show', [
             'veterinarian' => $veterinarian,
