@@ -17,6 +17,7 @@ interface DatePickerProps {
 }
 
 export function DatePicker({ value, onChange, id, name, placeholder = 'Pick a date', className }: DatePickerProps) {
+    const [open, setOpen] = React.useState(false);
     const [date, setDate] = React.useState<Date | undefined>(
         value ? (typeof value === 'string' ? new Date(value) : value) : undefined,
     );
@@ -28,7 +29,7 @@ export function DatePicker({ value, onChange, id, name, placeholder = 'Pick a da
     return (
         <div className={className}>
             <input type="hidden" id={id} name={name} value={date ? format(date, 'yyyy-MM-dd') : ''} />
-            <Popover>
+            <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                     <Button
                         variant="outline"
@@ -48,8 +49,10 @@ export function DatePicker({ value, onChange, id, name, placeholder = 'Pick a da
                         onSelect={(selectedDate) => {
                             setDate(selectedDate);
                             onChange?.(selectedDate);
+                            setOpen(false);
                         }}
                         initialFocus
+                        hideWeekdays
                     />
                 </PopoverContent>
             </Popover>
