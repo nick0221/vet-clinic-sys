@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePetRequest;
 use App\Http\Requests\UpdatePetRequest;
 use App\Models\Client;
+use App\Models\MedicalRecord;
 use App\Models\Pet;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -66,8 +67,15 @@ class PetController extends Controller
 
         $pet->load('client');
 
+        $medicalRecords = MedicalRecord::where('pet_id', $pet->id)
+            ->with('veterinarian')
+            ->latest('visit_date')
+            ->take(20)
+            ->get();
+
         return Inertia::render('pets/show', [
             'pet' => $pet,
+            'medicalRecords' => $medicalRecords,
         ]);
     }
 

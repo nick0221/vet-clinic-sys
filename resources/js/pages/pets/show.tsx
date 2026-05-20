@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
 import pets from '@/routes/pets';
 import clientsRoute from '@/routes/clients';
+import medicalRecords from '@/routes/medical-records';
 import { formatDate } from '@/lib/utils';
 
 interface PetShowProps {
@@ -30,6 +31,13 @@ interface PetShowProps {
             phone: string | null;
         };
     };
+    medicalRecords: Array<{
+        id: number;
+        visit_date: string;
+        subjective: string | null;
+        assessment: string | null;
+        veterinarian: { id: number; name: string };
+    }>;
 }
 
 export default function PetShow({ pet }: PetShowProps) {
@@ -122,6 +130,44 @@ export default function PetShow({ pet }: PetShowProps) {
                         </CardContent>
                     </Card>
                 )}
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Medical History</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {medicalRecords.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No medical records found.</p>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b text-left">
+                                            <th className="pb-3 font-medium">Date</th>
+                                            <th className="pb-3 font-medium">Veterinarian</th>
+                                            <th className="pb-3 font-medium">Assessment</th>
+                                            <th className="pb-3 font-medium text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {medicalRecords.map((record) => (
+                                            <tr key={record.id} className="border-b last:border-0">
+                                                <td className="py-3">{formatDate(record.visit_date)}</td>
+                                                <td className="py-3 text-muted-foreground">{record.veterinarian.name}</td>
+                                                <td className="py-3 text-muted-foreground max-w-xs truncate">{record.assessment ?? '—'}</td>
+                                                <td className="py-3 text-right">
+                                                    <Link href={medicalRecords.show(record.id)}>
+                                                        <Button variant="ghost" size="sm">View</Button>
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </>
     );
