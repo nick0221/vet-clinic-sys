@@ -12,6 +12,7 @@ use App\Models\Pet;
 use App\Models\Surgery;
 use App\Models\Vaccination;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -165,6 +166,60 @@ class DashboardController extends Controller
             ->sortDesc()
             ->take(6);
 
+        // Peak hours: appointments per day-of-week × hour (last 90 days)
+        $peakHours = Appointment::where('date_time', '>=', now()->subDays(90))
+            ->selectRaw("strftime('%w', date_time) as day, cast(strftime('%H', date_time) as integer) as hour, count(*) as count")
+            ->groupBy('day', 'hour')
+            ->orderBy('day')
+            ->orderBy('hour')
+            ->get()
+            ->map(fn ($r) => ['day' => (int) $r->day, 'hour' => $r->hour, 'count' => $r->count]);
+
+        // Average revenue per appointment type
+        $avgRevenueByType = DB::table('appointments')
+            ->join('invoices', 'appointments.id', '=', 'invoices.appointment_id')
+            ->join('payments', 'invoices.id', '=', 'payments.invoice_id')
+            ->select('appointments.type', DB::raw('avg(payments.amount) as avg_amount'))
+            ->groupBy('appointments.type')
+            ->orderByDesc('avg_amount')
+            ->get()
+            ->map(fn ($r) => ['type' => $r->type, 'avg_amount' => round((float) $r->avg_amount, 2)]);
+
+        // New client trend (12 weeks)
+        $weeklyClients = collect(range(11, 0, -1))->mapWithKeys(fn ($i) => [
+            now()->subWeeks($i)->startOfWeek()->format('Y-m-d') => 0,
+        ])->merge(
+            Client::where('created_at', '>=', now()->subWeeks(11)->startOfWeek())
+                ->selectRaw("date(created_at, 'weekday 0', '-6 days') as week_start, count(*) as count")
+                ->groupBy('week_start')
+                ->orderBy('week_start')
+                ->pluck('count', 'week_start')
+        );
+
+        // Patient age pyramid
+        $now = now();
+        $agePyramid = Pet::selectRaw("
+            case
+                when julianday('$now') - julianday(date_of_birth) < 365 then 'Junior'
+                when julianday('$now') - julianday(date_of_birth) < 2555 then 'Adult'
+                else 'Senior'
+            end as age_group, count(*) as count
+        ")->whereNotNull('date_of_birth')
+            ->groupBy('age_group')
+            ->orderByRaw("min(julianday('$now') - julianday(date_of_birth))")
+            ->pluck('count', 'age_group');
+
+        $appointmentTypeLabels = [
+            'checkup' => 'Checkup',
+            'consultation' => 'Consultation',
+            'vaccination' => 'Vaccination',
+            'surgery' => 'Surgery',
+            'dental' => 'Dental',
+            'emergency' => 'Emergency',
+            'follow_up' => 'Follow-up',
+            'grooming' => 'Grooming',
+        ];
+
         $upcomingAppointments = Appointment::with(['pet', 'client', 'veterinarian'])
             ->where('date_time', '>=', now())
             ->orderBy('date_time')
@@ -200,6 +255,11 @@ class DashboardController extends Controller
             'cancellationRate' => $cancellationRate,
             'expiringInventory' => $expiringInventory,
             'vetWorkload' => $vetWorkload,
+            'peakHours' => $peakHours,
+            'avgRevenueByType' => $avgRevenueByType,
+            'weeklyClients' => $weeklyClients,
+            'agePyramid' => $agePyramid,
+            'appointmentTypeLabels' => $appointmentTypeLabels,
         ]);
     }
 }

@@ -67,9 +67,15 @@ interface Appointment {
     veterinarian: { id: number; name: string };
 }
 
-interface VetWorkloadItem {
-    name: string;
+interface PeakHour {
+    day: number;
+    hour: number;
     count: number;
+}
+
+interface AvgRevenueType {
+    type: string;
+    avg_amount: number;
 }
 
 interface ExpiringItem {
@@ -110,6 +116,10 @@ interface DashboardProps {
     cancellationRate: number;
     expiringInventory: ExpiringItem[];
     vetWorkload: Record<string, number>;
+    peakHours: PeakHour[];
+    avgRevenueByType: AvgRevenueType[];
+    weeklyClients: Record<string, number>;
+    agePyramid: Record<string, number>;
 }
 
 function statusColor(status: string) {
@@ -145,7 +155,7 @@ function TrendBadge({ value, inverse }: { value: number | null | undefined; inve
     );
 }
 
-export default function Dashboard({ stats, recentClients, recentPets, upcomingAppointments, todaySchedule, weekCounts, revenueTrend, topTypesThisMonth, speciesBreakdown, trends, cancellationRate, expiringInventory, vetWorkload }: DashboardProps) {
+export default function Dashboard({ stats, recentClients, recentPets, upcomingAppointments, todaySchedule, weekCounts, revenueTrend, topTypesThisMonth, speciesBreakdown, trends, cancellationRate, expiringInventory, vetWorkload, peakHours, avgRevenueByType, weeklyClients, agePyramid }: DashboardProps) {
     const [tab, setTab] = React.useState('overview');
     const hasAlerts = stats.lowStockItems > 0 || stats.overdueInvoices > 0 || stats.pendingLabRequests > 0;
 
@@ -563,124 +573,241 @@ export default function Dashboard({ stats, recentClients, recentPets, upcomingAp
                     </TabsContent>
 
                     <TabsContent value="analytics" className="no-print">
-                        <div className="grid gap-4 md:grid-cols-3">
-                            <Card className="md:col-span-2">
-                                <CardHeader>
-                                    <div className="flex items-center justify-between">
-                                        <CardTitle className="flex items-center gap-2">
-                                            <TrendingUp className="h-4 w-4" />
-                                            Revenue Trend (30 days)
-                                        </CardTitle>
-                                        <span className="text-sm text-muted-foreground">
-                                            {formatCurrency(stats.monthRevenue)} this month
-                                        </span>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <ResponsiveContainer width="100%" height={200}>
-                                        <BarChart data={Object.entries(revenueTrend).map(([date, total]) => ({ date, total }))}>
-                                            <XAxis
-                                                dataKey="date"
-                                                tickFormatter={(val: string) => {
-                                                    const d = new Date(val + 'T00:00:00');
-                                                    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                                                }}
-                                                fontSize={11}
-                                                tickLine={false}
-                                                axisLine={false}
-                                                interval="preserveStartEnd"
-                                            />
-                                            <YAxis hide />
-                                            <Tooltip
-                                                formatter={(value: number) => [formatCurrency(value), 'Revenue']}
-                                                labelFormatter={(label: string) => formatDate(label)}
-                                                contentStyle={{ fontSize: 13 }}
-                                            />
-                                            <Bar dataKey="total" radius={[3, 3, 0, 0]} maxBarSize={20}>
-                                                {Object.entries(revenueTrend).map(([_, total]) => (
-                                                    <Cell key={_} fill={total > 0 ? '#16a34a' : '#e5e7eb'} />
-                                                ))}
-                                            </Bar>
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </CardContent>
-                            </Card>
-
-                            <div className="space-y-4">
-                                <Card>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="text-sm">Top Appointment Types</CardTitle>
+                        <div className="space-y-4">
+                            <div className="grid gap-4 md:grid-cols-3">
+                                <Card className="md:col-span-2">
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between">
+                                            <CardTitle className="flex items-center gap-2">
+                                                <TrendingUp className="h-4 w-4" />
+                                                Revenue Trend (30 days)
+                                            </CardTitle>
+                                            <span className="text-sm text-muted-foreground">
+                                                {formatCurrency(stats.monthRevenue)} this month
+                                            </span>
+                                        </div>
                                     </CardHeader>
-                                    <CardContent className="space-y-2">
-                                        {Object.entries(topTypesThisMonth).length === 0 && (
-                                            <p className="text-sm text-muted-foreground">No appointments this month.</p>
-                                        )}
-                                        {Object.entries(topTypesThisMonth).map(([type, count]) => {
-                                            const maxCount = Math.max(...Object.values(topTypesThisMonth));
-                                            return (
-                                                <div key={type} className="flex items-center gap-3">
-                                                    <span className="w-24 truncate text-sm">{typeCounts[type] ?? type}</span>
-                                                    <div className="flex-1 h-2 rounded-full bg-muted">
-                                                        <div
-                                                            className="h-2 rounded-full bg-primary"
-                                                            style={{ width: `${(count / maxCount) * 100}%` }}
-                                                        />
-                                                    </div>
-                                                    <span className="text-sm font-medium tabular-nums">{count}</span>
-                                                </div>
-                                            );
-                                        })}
+                                    <CardContent>
+                                        <ResponsiveContainer width="100%" height={200}>
+                                            <BarChart data={Object.entries(revenueTrend).map(([date, total]) => ({ date, total }))}>
+                                                <XAxis
+                                                    dataKey="date"
+                                                    tickFormatter={(val: string) => {
+                                                        const d = new Date(val + 'T00:00:00');
+                                                        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                                    }}
+                                                    fontSize={11}
+                                                    tickLine={false}
+                                                    axisLine={false}
+                                                    interval="preserveStartEnd"
+                                                />
+                                                <YAxis hide />
+                                                <Tooltip
+                                                    formatter={(value: number) => [formatCurrency(value), 'Revenue']}
+                                                    labelFormatter={(label: string) => formatDate(label)}
+                                                    contentStyle={{ fontSize: 13 }}
+                                                />
+                                                <Bar dataKey="total" radius={[3, 3, 0, 0]} maxBarSize={20}>
+                                                    {Object.entries(revenueTrend).map(([_, total]) => (
+                                                        <Cell key={_} fill={total > 0 ? '#16a34a' : '#e5e7eb'} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
                                     </CardContent>
                                 </Card>
 
-                                <Card>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="text-sm">Patients by Species</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-2">
-                                        {Object.entries(speciesBreakdown).map(([species, count], _, arr) => {
-                                            const total = arr.reduce((s, [, c]) => s + c, 0);
-                                            const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                                            const colors: Record<string, string> = {
-                                                Dog: 'bg-blue-500',
-                                                Cat: 'bg-orange-500',
-                                                Bird: 'bg-green-500',
-                                                Rabbit: 'bg-purple-500',
-                                                Other: 'bg-gray-400',
-                                            };
-                                            return (
-                                                <div key={species} className="flex items-center gap-3">
-                                                    <span className="w-20 text-sm">{species}</span>
-                                                    <div className="flex-1 h-2 rounded-full bg-muted">
-                                                        <div
-                                                            className={`h-2 rounded-full ${colors[species] ?? 'bg-gray-400'}`}
-                                                            style={{ width: `${pct}%` }}
-                                                        />
+                                <div className="space-y-4">
+                                    <Card>
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-sm">Top Appointment Types</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-2">
+                                            {Object.entries(topTypesThisMonth).length === 0 && (
+                                                <p className="text-sm text-muted-foreground">No appointments this month.</p>
+                                            )}
+                                            {Object.entries(topTypesThisMonth).map(([type, count]) => {
+                                                const maxCount = Math.max(...Object.values(topTypesThisMonth));
+                                                return (
+                                                    <div key={type} className="flex items-center gap-3">
+                                                        <span className="w-24 truncate text-sm">{typeCounts[type] ?? type}</span>
+                                                        <div className="flex-1 h-2 rounded-full bg-muted">
+                                                            <div className="h-2 rounded-full bg-primary" style={{ width: `${(count / maxCount) * 100}%` }} />
+                                                        </div>
+                                                        <span className="text-sm font-medium tabular-nums">{count}</span>
                                                     </div>
-                                                    <span className="text-sm font-medium tabular-nums">{count}</span>
-                                                    <span className="text-xs text-muted-foreground tabular-nums">{pct}%</span>
-                                                </div>
-                                            );
-                                        })}
-                                    </CardContent>
-                                </Card>
-
-                                <div className="flex gap-4">
-                                    <Card className="flex-1">
-                                        <CardContent className="flex items-center gap-3 py-4">
-                                            <Syringe className="h-5 w-5 text-muted-foreground shrink-0" />
-                                            <div>
-                                                <div className="text-2xl font-bold">{stats.vacDueSoon}</div>
-                                                <p className="text-xs text-muted-foreground">Due in 14d</p>
-                                            </div>
+                                                );
+                                            })}
                                         </CardContent>
                                     </Card>
-                                    <Card className="flex-1">
-                                        <CardContent className="flex items-center gap-3 py-4">
-                                            <Repeat className="h-5 w-5 text-muted-foreground shrink-0" />
-                                            <div>
-                                                <div className="text-2xl font-bold">{stats.repeatClientRate}%</div>
-                                                <p className="text-xs text-muted-foreground">Repeat clients</p>
+
+                                    <Card>
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-sm">Avg Revenue per Type</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-2">
+                                            {avgRevenueByType.length === 0 && (
+                                                <p className="text-sm text-muted-foreground">No revenue data yet.</p>
+                                            )}
+                                            {avgRevenueByType.map((r) => (
+                                                <div key={r.type} className="flex items-center justify-between">
+                                                    <span className="text-sm">{typeCounts[r.type] ?? r.type}</span>
+                                                    <span className="text-sm font-medium tabular-nums">{formatCurrency(r.avg_amount)}</span>
+                                                </div>
+                                            ))}
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </div>
+
+                            <div className="grid gap-4 md:grid-cols-3">
+                                <Card className="md:col-span-2">
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="flex items-center gap-2 text-sm">
+                                            <Calendar className="h-4 w-4" />
+                                            Peak Hours (last 90 days)
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="overflow-x-auto">
+                                            <div className="grid grid-cols-[40px_repeat(24,1fr)] gap-px text-[10px]" style={{ minWidth: 500 }}>
+                                                <div />
+                                                {Array.from({ length: 24 }, (_, h) => (
+                                                    <div key={h} className="text-center text-muted-foreground font-medium">
+                                                        {h.toString().padStart(2, '0')}
+                                                    </div>
+                                                ))}
+                                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, di) => (
+                                                    <>
+                                                        <div key={day} className="text-right text-muted-foreground font-medium pr-1 leading-5">
+                                                            {day}
+                                                        </div>
+                                                        {Array.from({ length: 24 }, (_, hi) => {
+                                                            const cell = peakHours.find(p => p.day === di && p.hour === hi);
+                                                            const count = cell?.count ?? 0;
+                                                            const maxCount = Math.max(1, ...peakHours.map(p => p.count));
+                                                            const intensity = count > 0 ? Math.max(0.1, count / maxCount) : 0;
+                                                            return (
+                                                                <div
+                                                                    key={hi}
+                                                                    className="h-5 rounded-sm"
+                                                                    style={{
+                                                                        backgroundColor: count > 0
+                                                                            ? `rgba(22, 163, 74, ${intensity})`
+                                                                            : 'transparent',
+                                                                    }}
+                                                                    title={`${day} ${hi.toString().padStart(2, '0')}:00 — ${count} appointment${count !== 1 ? 's' : ''}`}
+                                                                />
+                                                            );
+                                                        })}
+                                                    </>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                <div className="space-y-4">
+                                    <Card>
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-sm">Patients by Species</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-2">
+                                            {Object.entries(speciesBreakdown).map(([species, count], _, arr) => {
+                                                const total = arr.reduce((s, [, c]) => s + c, 0);
+                                                const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                                                const colors: Record<string, string> = {
+                                                    Dog: 'bg-blue-500', Cat: 'bg-orange-500', Bird: 'bg-green-500',
+                                                    Rabbit: 'bg-purple-500', Other: 'bg-gray-400',
+                                                };
+                                                return (
+                                                    <div key={species} className="flex items-center gap-3">
+                                                        <span className="w-20 text-sm">{species}</span>
+                                                        <div className="flex-1 h-2 rounded-full bg-muted">
+                                                            <div className={`h-2 rounded-full ${colors[species] ?? 'bg-gray-400'}`} style={{ width: `${pct}%` }} />
+                                                        </div>
+                                                        <span className="text-sm font-medium tabular-nums">{count}</span>
+                                                        <span className="text-xs text-muted-foreground tabular-nums">{pct}%</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card>
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-sm">Patient Age Pyramid</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-2">
+                                            {Object.entries(agePyramid).length === 0 && (
+                                                <p className="text-sm text-muted-foreground">No age data.</p>
+                                            )}
+                                            {Object.entries(agePyramid).map(([group, count], _, arr) => {
+                                                const total = arr.reduce((s, [, c]) => s + c, 0);
+                                                const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                                                const groupColors: Record<string, string> = {
+                                                    Junior: 'bg-green-400', Adult: 'bg-blue-500', Senior: 'bg-amber-500',
+                                                };
+                                                return (
+                                                    <div key={group} className="flex items-center gap-3">
+                                                        <span className="text-sm">{group}</span>
+                                                        <div className="flex-1 h-2 rounded-full bg-muted">
+                                                            <div className={`h-2 rounded-full ${groupColors[group] ?? 'bg-gray-400'}`} style={{ width: `${pct}%` }} />
+                                                        </div>
+                                                        <span className="text-sm font-medium tabular-nums">{count}</span>
+                                                        <span className="text-xs text-muted-foreground tabular-nums">{pct}%</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </div>
+
+                            <div className="grid gap-4 md:grid-cols-3">
+                                <Card className="md:col-span-2">
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="flex items-center gap-2 text-sm">
+                                            <TrendingUp className="h-4 w-4" />
+                                            New Clients (weekly)
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <ResponsiveContainer width="100%" height={120}>
+                                            <BarChart data={Object.entries(weeklyClients).map(([date, count]) => ({ date, count }))}>
+                                                <XAxis dataKey="date" tickFormatter={(v: string) => {
+                                                    const d = new Date(v + 'T00:00:00');
+                                                    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                                }} fontSize={10} tickLine={false} axisLine={false} />
+                                                <YAxis hide />
+                                                <Tooltip
+                                                    formatter={(value: number) => [value, 'New clients']}
+                                                    labelFormatter={(label: string) => `Week of ${formatDate(label)}`}
+                                                    contentStyle={{ fontSize: 13 }}
+                                                />
+                                                <Bar dataKey="count" radius={[3, 3, 0, 0]} fill="#6366f1" maxBarSize={24} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </CardContent>
+                                </Card>
+
+                                <div className="space-y-4">
+                                    <div className="flex gap-4">
+                                        <Card className="flex-1">
+                                            <CardContent className="flex items-center gap-3 py-4">
+                                                <Syringe className="h-5 w-5 text-muted-foreground shrink-0" />
+                                                <div>
+                                                    <div className="text-2xl font-bold">{stats.vacDueSoon}</div>
+                                                    <p className="text-xs text-muted-foreground">Due in 14d</p>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                        <Card className="flex-1">
+                                            <CardContent className="flex items-center gap-3 py-4">
+                                                <Repeat className="h-5 w-5 text-muted-foreground shrink-0" />
+                                                <div>
+                                                    <div className="text-2xl font-bold">{stats.repeatClientRate}%</div>
+                                                    <p className="text-xs text-muted-foreground">Repeat clients</p>
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -712,6 +839,7 @@ export default function Dashboard({ stats, recentClients, recentPets, upcomingAp
                                     )}
                                 </div>
                             </div>
+                        </div>
                     </TabsContent>
                 </Tabs>
             </div>
