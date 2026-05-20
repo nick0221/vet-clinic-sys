@@ -56,6 +56,13 @@ class DashboardController extends Controller
             ->orderBy('date_time')
             ->get();
 
+        $weekStart = now()->startOfWeek();
+        $weekEnd = now()->endOfWeek();
+        $weekCounts = Appointment::selectRaw('date(date_time) as date, count(*) as count')
+            ->whereBetween('date_time', [$weekStart, $weekEnd])
+            ->groupBy('date')
+            ->pluck('count', 'date');
+
         $upcomingAppointments = Appointment::with(['pet', 'client', 'veterinarian'])
             ->where('date_time', '>=', now())
             ->orderBy('date_time')
@@ -81,6 +88,7 @@ class DashboardController extends Controller
             'recentPets' => $recentPets,
             'upcomingAppointments' => $upcomingAppointments,
             'todaySchedule' => $todaySchedule,
+            'weekCounts' => $weekCounts,
         ]);
     }
 }

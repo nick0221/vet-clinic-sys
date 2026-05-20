@@ -68,6 +68,7 @@ interface DashboardProps {
     recentPets: Pet[];
     upcomingAppointments: Appointment[];
     todaySchedule: Appointment[];
+    weekCounts: Record<string, number>;
 }
 
 function statusColor(status: string) {
@@ -87,8 +88,38 @@ function formatCurrency(val: number | string): string {
     return '$' + num.toFixed(2);
 }
 
-export default function Dashboard({ stats, recentClients, recentPets, upcomingAppointments, todaySchedule }: DashboardProps) {
+export default function Dashboard({ stats, recentClients, recentPets, upcomingAppointments, todaySchedule, weekCounts }: DashboardProps) {
     const hasAlerts = stats.lowStockItems > 0 || stats.overdueInvoices > 0 || stats.pendingLabRequests > 0;
+
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset);
+    const weekDayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const todayStr = today.toISOString().slice(0, 10);
+    const weekDays = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        const dateStr = d.toISOString().slice(0, 10);
+        return { label: weekDayLabels[i], date: dateStr, count: weekCounts[dateStr] ?? 0, isToday: dateStr === todayStr };
+    });
+
+    const typeCounts: Record<string, string> = {
+        checkup: 'Checkup',
+        consultation: 'Consultation',
+        vaccination: 'Vaccination',
+        surgery: 'Surgery',
+        dental: 'Dental',
+        emergency: 'Emergency',
+        follow_up: 'Follow-up',
+        grooming: 'Grooming',
+    };
+    const todayTypeCounts: Record<string, number> = {};
+    todaySchedule.forEach((apt) => {
+        todayTypeCounts[apt.type] = (todayTypeCounts[apt.type] ?? 0) + 1;
+    });
+    const todayTypes = Object.entries(todayTypeCounts).sort((a, b) => b[1] - a[1]);
 
     return (
         <>
@@ -131,6 +162,23 @@ export default function Dashboard({ stats, recentClients, recentPets, upcomingAp
                         </CardContent>
                     </Card>
                 )}
+
+                <div className="flex items-center gap-3 overflow-x-auto pb-2">
+                    {weekDays.map((d) => (
+                        <div
+                            key={d.date}
+                            className={`flex min-w-[72px] flex-col items-center gap-1 rounded-lg border px-3 py-2 text-center ${
+                                d.isToday ? 'border-primary bg-primary/5' : 'border-border'
+                            }`}
+                        >
+                            <span className="text-xs text-muted-foreground">{d.label}</span>
+                            <span className={`text-lg font-bold ${d.isToday ? 'text-primary' : ''}`}>
+                                {d.count}
+                            </span>
+                            {d.isToday && <span className="text-[10px] font-medium text-primary">Today</span>}
+                        </div>
+                    ))}
+                </div>
 
                 <div className="grid auto-rows-min gap-4 md:grid-cols-4">
                     <Link href={clients.index()}>
@@ -234,6 +282,15 @@ export default function Dashboard({ stats, recentClients, recentPets, upcomingAp
                                     <Button variant="ghost" size="sm">View All</Button>
                                 </Link>
                             </div>
+                            {todayTypes.length > 0 && (
+                                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                                    {todayTypes.map(([type, count]) => (
+                                        <Badge key={type} variant="secondary" className="text-[11px]">
+                                            {typeCounts[type] ?? type} ({count})
+                                        </Badge>
+                                    ))}
+                                </div>
+                            )}
                         </CardHeader>
                         <CardContent>
                             {todaySchedule.length === 0 ? (
