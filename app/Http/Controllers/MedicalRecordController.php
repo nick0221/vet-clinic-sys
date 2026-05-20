@@ -18,7 +18,7 @@ class MedicalRecordController extends Controller
     {
         $this->authorize('medical-records.view-any');
 
-        $query = MedicalRecord::with(['pet', 'veterinarian'])
+        $query = MedicalRecord::with(['pet.client', 'veterinarian'])
             ->orderBy('visit_date', 'desc');
 
         if ($request->filled('pet_id')) {
