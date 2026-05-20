@@ -8,7 +8,9 @@ import {
     Package,
     PawPrint,
     Plus,
+    Repeat,
     Syringe,
+    TrendingUp,
     Users,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,7 +25,16 @@ import inventory from '@/routes/inventory';
 import labRequests from '@/routes/lab-requests';
 import surgeries from '@/routes/surgeries';
 import vaccinations from '@/routes/vaccinations';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+    Cell,
+} from 'recharts';
 
 interface Client {
     id: number;
@@ -63,12 +74,17 @@ interface DashboardProps {
         monthRevenue: number;
         outstandingRevenue: number;
         overdueInvoices: number;
+        vacDueSoon: number;
+        repeatClientRate: number;
     };
     recentClients: Client[];
     recentPets: Pet[];
     upcomingAppointments: Appointment[];
     todaySchedule: Appointment[];
     weekCounts: Record<string, number>;
+    revenueTrend: Record<string, number>;
+    topTypesThisMonth: Record<string, number>;
+    speciesBreakdown: Record<string, number>;
 }
 
 function statusColor(status: string) {
@@ -88,7 +104,7 @@ function formatCurrency(val: number | string): string {
     return '$' + num.toFixed(2);
 }
 
-export default function Dashboard({ stats, recentClients, recentPets, upcomingAppointments, todaySchedule, weekCounts }: DashboardProps) {
+export default function Dashboard({ stats, recentClients, recentPets, upcomingAppointments, todaySchedule, weekCounts, revenueTrend, topTypesThisMonth, speciesBreakdown }: DashboardProps) {
     const hasAlerts = stats.lowStockItems > 0 || stats.overdueInvoices > 0 || stats.pendingLabRequests > 0;
 
     const today = new Date();
@@ -425,6 +441,131 @@ export default function Dashboard({ stats, recentClients, recentPets, upcomingAp
                                 </div>
                             </CardContent>
                         </Card>
+                    </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                    <Card className="md:col-span-2">
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="flex items-center gap-2">
+                                    <TrendingUp className="h-4 w-4" />
+                                    Revenue Trend (30 days)
+                                </CardTitle>
+                                <span className="text-sm text-muted-foreground">
+                                    {formatCurrency(stats.monthRevenue)} this month
+                                </span>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <ResponsiveContainer width="100%" height={200}>
+                                <BarChart data={Object.entries(revenueTrend).map(([date, total]) => ({ date, total }))}>
+                                    <XAxis
+                                        dataKey="date"
+                                        tickFormatter={(val: string) => {
+                                            const d = new Date(val + 'T00:00:00');
+                                            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                        }}
+                                        fontSize={11}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        interval="preserveStartEnd"
+                                    />
+                                    <YAxis hide />
+                                    <Tooltip
+                                        formatter={(value: number) => [formatCurrency(value), 'Revenue']}
+                                        labelFormatter={(label: string) => formatDate(label)}
+                                        contentStyle={{ fontSize: 13 }}
+                                    />
+                                    <Bar dataKey="total" radius={[3, 3, 0, 0]} maxBarSize={20}>
+                                        {Object.entries(revenueTrend).map(([_, total]) => (
+                                            <Cell key={_} fill={total > 0 ? '#16a34a' : '#e5e7eb'} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+
+                    <div className="space-y-4">
+                        <Card>
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-sm">Top Appointment Types</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                                {Object.entries(topTypesThisMonth).length === 0 && (
+                                    <p className="text-sm text-muted-foreground">No appointments this month.</p>
+                                )}
+                                {Object.entries(topTypesThisMonth).map(([type, count]) => {
+                                    const maxCount = Math.max(...Object.values(topTypesThisMonth));
+                                    return (
+                                        <div key={type} className="flex items-center gap-3">
+                                            <span className="w-24 truncate text-sm">{typeCounts[type] ?? type}</span>
+                                            <div className="flex-1 h-2 rounded-full bg-muted">
+                                                <div
+                                                    className="h-2 rounded-full bg-primary"
+                                                    style={{ width: `${(count / maxCount) * 100}%` }}
+                                                />
+                                            </div>
+                                            <span className="text-sm font-medium tabular-nums">{count}</span>
+                                        </div>
+                                    );
+                                })}
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-sm">Patients by Species</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                                {Object.entries(speciesBreakdown).map(([species, count], _, arr) => {
+                                    const total = arr.reduce((s, [, c]) => s + c, 0);
+                                    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                                    const colors: Record<string, string> = {
+                                        Dog: 'bg-blue-500',
+                                        Cat: 'bg-orange-500',
+                                        Bird: 'bg-green-500',
+                                        Rabbit: 'bg-purple-500',
+                                        Other: 'bg-gray-400',
+                                    };
+                                    return (
+                                        <div key={species} className="flex items-center gap-3">
+                                            <span className="w-20 text-sm">{species}</span>
+                                            <div className="flex-1 h-2 rounded-full bg-muted">
+                                                <div
+                                                    className={`h-2 rounded-full ${colors[species] ?? 'bg-gray-400'}`}
+                                                    style={{ width: `${pct}%` }}
+                                                />
+                                            </div>
+                                            <span className="text-sm font-medium tabular-nums">{count}</span>
+                                            <span className="text-xs text-muted-foreground tabular-nums">{pct}%</span>
+                                        </div>
+                                    );
+                                })}
+                            </CardContent>
+                        </Card>
+
+                        <div className="flex gap-4">
+                            <Card className="flex-1">
+                                <CardContent className="flex items-center gap-3 py-4">
+                                    <Syringe className="h-5 w-5 text-muted-foreground shrink-0" />
+                                    <div>
+                                        <div className="text-2xl font-bold">{stats.vacDueSoon}</div>
+                                        <p className="text-xs text-muted-foreground">Due in 14d</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            <Card className="flex-1">
+                                <CardContent className="flex items-center gap-3 py-4">
+                                    <Repeat className="h-5 w-5 text-muted-foreground shrink-0" />
+                                    <div>
+                                        <div className="text-2xl font-bold">{stats.repeatClientRate}%</div>
+                                        <p className="text-xs text-muted-foreground">Repeat clients</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 </div>
             </div>

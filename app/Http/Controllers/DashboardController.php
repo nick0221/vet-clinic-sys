@@ -63,6 +63,43 @@ class DashboardController extends Controller
             ->groupBy('date')
             ->pluck('count', 'date');
 
+        $revenueTrend = Payment::where('payment_date', '>=', now()->subDays(29))
+            ->selectRaw('date(payment_date) as date, sum(amount) as total')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->pluck('total', 'date');
+
+        $fullTrend = collect(range(29, 0, -1))->mapWithKeys(fn ($i) => [
+            now()->subDays($i)->format('Y-m-d') => 0,
+        ])->merge($revenueTrend);
+
+        $topTypesThisMonth = Appointment::whereMonth('date_time', now()->month)
+            ->whereYear('date_time', now()->year)
+            ->selectRaw('type, count(*) as count')
+            ->groupBy('type')
+            ->orderByDesc('count')
+            ->take(5)
+            ->pluck('count', 'type');
+
+        $speciesBreakdown = Pet::selectRaw('species, count(*) as count')
+            ->groupBy('species')
+            ->orderByDesc('count')
+            ->pluck('count', 'species');
+
+        $vacDueSoon = Vaccination::whereNotNull('next_due_date')
+            ->where('next_due_date', '<=', now()->addDays(14))
+            ->count();
+
+        $clientApptCounts = Appointment::select('client_id')
+            ->selectRaw('count(*) as total')
+            ->groupBy('client_id')
+            ->pluck('total', 'client_id');
+        $totalClientsWithAppts = $clientApptCounts->count();
+        $repeatClients = $clientApptCounts->filter(fn ($c) => $c >= 2)->count();
+        $repeatClientRate = $totalClientsWithAppts > 0
+            ? round($repeatClients / $totalClientsWithAppts * 100, 1)
+            : 0;
+
         $upcomingAppointments = Appointment::with(['pet', 'client', 'veterinarian'])
             ->where('date_time', '>=', now())
             ->orderBy('date_time')
@@ -83,12 +120,19 @@ class DashboardController extends Controller
                 'monthRevenue' => $monthRevenue,
                 'outstandingRevenue' => $outstandingRevenue,
                 'overdueInvoices' => $overdueInvoices,
+                'vacDueSoon' => $vacDueSoon,
+                'repeatClientRate' => $repeatClientRate,
             ],
             'recentClients' => $recentClients,
             'recentPets' => $recentPets,
             'upcomingAppointments' => $upcomingAppointments,
             'todaySchedule' => $todaySchedule,
             'weekCounts' => $weekCounts,
+            'revenueTrend' => $fullTrend,
+            'topTypesThisMonth' => $topTypesThisMonth,
+            'speciesBreakdown' => $speciesBreakdown,
+            'vacDueSoon' => $vacDueSoon,
+            'repeatClientRate' => $repeatClientRate,
         ]);
     }
 }
