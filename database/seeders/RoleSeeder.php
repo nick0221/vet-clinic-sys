@@ -18,6 +18,7 @@ class RoleSeeder extends Seeder
 
         Permission::firstOrCreate(['name' => 'dashboard.view']);
         Permission::firstOrCreate(['name' => 'settings.view']);
+        Permission::firstOrCreate(['name' => 'settings.update']);
 
         foreach ($modules as $module) {
             foreach (['view-any', 'view', 'create', 'update', 'delete', 'restore'] as $action) {

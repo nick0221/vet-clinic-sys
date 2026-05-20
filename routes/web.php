@@ -13,6 +13,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PetController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\SurgeryController;
+use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\VaccinationController;
 use App\Http\Controllers\VeterinarianController;
 use Illuminate\Support\Facades\Route;
@@ -71,6 +72,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('surgeries', SurgeryController::class);
     Route::patch('surgeries/{surgery}/restore', [SurgeryController::class, 'restore'])->name('surgeries.restore')->withTrashed();
     Route::post('surgeries/{surgery}/procedures', [SurgeryController::class, 'storeProcedure'])->name('surgeries.procedures.store');
+
+    Route::get('settings/system', [SystemSettingsController::class, 'edit'])->name('settings.system.edit');
+    Route::put('settings/system', [SystemSettingsController::class, 'update'])->name('settings.system.update');
 
     Route::get('notifications', [NotificationsController::class, 'index'])->name('notifications.index');
     Route::post('notifications/{id}/read', [NotificationsController::class, 'markAsRead'])->name('notifications.read');

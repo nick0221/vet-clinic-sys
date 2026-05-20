@@ -10,6 +10,7 @@ import {
     Package,
     PawPrint,
     Pill,
+    Settings,
     Stethoscope,
     Syringe,
     Users,
@@ -40,6 +41,7 @@ import prescriptions from '@/routes/prescriptions';
 import surgeries from '@/routes/surgeries';
 import vaccinations from '@/routes/vaccinations';
 import veterinarians from '@/routes/veterinarians';
+import settingsRoute from '@/routes/settings/system';
 import type { NavGroup, NavItem } from '@/types';
 
 function can(permissions: string[], permission: string): boolean {
@@ -117,6 +119,9 @@ export function AppSidebar() {
         const adminItems: NavItem[] = [];
         if (can(permissions, 'veterinarians.view-any')) {
             adminItems.push({ title: 'Veterinarians', href: veterinarians.index(), icon: Stethoscope });
+        }
+        if (can(permissions, 'settings.view')) {
+            adminItems.push({ title: 'System Settings', href: settingsRoute.edit(), icon: Settings });
         }
         if (adminItems.length > 0) {
             groups.push({ label: 'Administration', items: adminItems });
