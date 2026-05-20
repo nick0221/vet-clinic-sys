@@ -74,6 +74,23 @@ class SurgeryController extends Controller
         return redirect()->back();
     }
 
+    public function storeProcedure(Request $request, Surgery $surgery)
+    {
+        $this->authorize('surgeries.update');
+
+        $validated = $request->validate([
+            'procedure_name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'notes' => 'nullable|string',
+        ]);
+
+        $surgery->procedures()->create($validated);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Procedure added successfully.']);
+
+        return redirect()->back();
+    }
+
     public function destroy(Surgery $surgery)
     {
         $this->authorize('surgeries.delete');

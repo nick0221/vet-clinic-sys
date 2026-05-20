@@ -34,7 +34,7 @@ test('show returns inventory item detail', function () {
     $item = InventoryItem::factory()->create();
 
     $this->get(route('inventory.show', $item))->assertSuccessful();
-})->skip('Controller has loadMissing() bug on line 57');
+});
 
 test('update modifies an inventory item', function () {
     $item = InventoryItem::factory()->create();

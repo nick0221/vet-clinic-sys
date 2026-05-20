@@ -257,6 +257,7 @@ export default function AppointmentsIndex({ appointments: data, veterinarians, p
                                                 <Label htmlFor="type">Type</Label>
                                                 <select id="type" name="type" required className="border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] md:text-sm">
                                                     <option value="checkup">Checkup</option>
+                                                    <option value="consultation">Consultation</option>
                                                     <option value="vaccination">Vaccination</option>
                                                     <option value="surgery">Surgery</option>
                                                     <option value="follow_up">Follow Up</option>
@@ -507,6 +508,7 @@ export default function AppointmentsIndex({ appointments: data, veterinarians, p
                                             <Label htmlFor="edit-type">Type</Label>
                                             <select id="edit-type" name="type" required className="border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] md:text-sm" defaultValue={editingAppointment.type}>
                                                 <option value="checkup">Checkup</option>
+                                                <option value="consultation">Consultation</option>
                                                 <option value="vaccination">Vaccination</option>
                                                 <option value="surgery">Surgery</option>
                                                 <option value="follow_up">Follow Up</option>

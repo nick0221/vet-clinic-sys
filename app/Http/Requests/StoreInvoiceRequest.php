@@ -19,12 +19,17 @@ class StoreInvoiceRequest extends FormRequest
             'pet_id' => ['required', 'exists:pets,id'],
             'appointment_id' => ['nullable', 'exists:appointments,id'],
             'veterinarian_id' => ['required', 'exists:users,id'],
-            'subtotal' => ['required', 'numeric', 'min:0'],
-            'tax' => ['required', 'numeric', 'min:0'],
-            'total' => ['required', 'numeric', 'min:0'],
+            'subtotal' => ['nullable', 'numeric', 'min:0'],
+            'tax' => ['nullable', 'numeric', 'min:0'],
+            'total' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', 'in:draft,pending,paid,overdue,cancelled,refunded'],
             'due_date' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
+            'items' => ['nullable', 'array'],
+            'items.*.description' => ['required', 'string', 'max:255'],
+            'items.*.quantity' => ['required', 'numeric', 'min:1'],
+            'items.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'items.*.type' => ['required', 'string', 'in:service,product'],
         ];
     }
 }

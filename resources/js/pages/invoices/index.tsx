@@ -23,6 +23,15 @@ interface Client { id: number; name: string }
 interface Pet { id: number; name: string }
 interface Veterinarian { id: number; name: string }
 
+interface InvoiceItemData {
+    id: number;
+    description: string;
+    quantity: string;
+    unit_price: string;
+    total: string;
+    type: string;
+}
+
 interface InvoiceData {
     id: number;
     invoice_number: string;
@@ -35,7 +44,16 @@ interface InvoiceData {
     client: Client;
     pet: Pet;
     veterinarian: Veterinarian;
+    items: InvoiceItemData[];
     created_at: string;
+}
+
+interface LineItemState {
+    key: string;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    type: 'service' | 'product';
 }
 
 interface PaginatedData {
@@ -67,18 +85,79 @@ export default function InvoicesIndex({ invoices: data, clients, pets: allPets, 
     const [editingInvoice, setEditingInvoice] = useState<InvoiceData | null>(null);
     const { errors } = usePage().props;
 
-    function formToJson(form: HTMLFormElement) {
-        const data = new FormData(form);
-        const values: Record<string, unknown> = {};
-        for (const [key, value] of data) {
-            values[key] = value === '' ? null : value;
-        }
-        return values;
+    const [items, setItems] = useState<LineItemState[]>([]);
+    const [taxPercent, setTaxPercent] = useState(0);
+    const [editItems, setEditItems] = useState<LineItemState[]>([]);
+    const [editTaxPercent, setEditTaxPercent] = useState(0);
+
+    function addItem() {
+        setItems([...items, { key: crypto.randomUUID(), description: '', quantity: 1, unit_price: 0, type: 'service' }]);
     }
+
+    function updateItem(index: number, field: keyof LineItemState, value: string | number) {
+        setItems(items.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
+    }
+
+    function removeItem(index: number) {
+        setItems(items.filter((_, i) => i !== index));
+    }
+
+    function addEditItem() {
+        setEditItems([...editItems, { key: crypto.randomUUID(), description: '', quantity: 1, unit_price: 0, type: 'service' }]);
+    }
+
+    function updateEditItem(index: number, field: keyof LineItemState, value: string | number) {
+        setEditItems(editItems.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
+    }
+
+    function removeEditItem(index: number) {
+        setEditItems(editItems.filter((_, i) => i !== index));
+    }
+
+    useEffect(() => {
+        if (!createOpen) {
+            setItems([]);
+            setTaxPercent(0);
+        }
+    }, [createOpen]);
+
+    useEffect(() => {
+        if (editingInvoice) {
+            const invoiceItems: InvoiceItemData[] = (editingInvoice as InvoiceData).items ?? [];
+            setEditItems(invoiceItems.map((item) => ({
+                key: crypto.randomUUID(),
+                description: item.description,
+                quantity: Number(item.quantity),
+                unit_price: Number(item.unit_price),
+                type: item.type as 'service' | 'product',
+            })));
+            const sub = Number(editingInvoice.subtotal);
+            const tax = Number(editingInvoice.tax);
+            setEditTaxPercent(sub > 0 ? (tax / sub) * 100 : 0);
+        } else {
+            setEditItems([]);
+            setEditTaxPercent(0);
+        }
+    }, [editingInvoice]);
 
     function handleCreateSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        const values = formToJson(e.currentTarget);
+        const form = e.currentTarget;
+        const formData = new FormData(form);
+        const values: Record<string, unknown> = {};
+        for (const [key, value] of formData) {
+            values[key] = value === '' ? null : value;
+        }
+        values.items = items.map((item) => ({
+            description: item.description,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            type: item.type,
+        }));
+        const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+        values.subtotal = subtotal;
+        values.tax = taxPercent;
+        values.total = subtotal + (subtotal * taxPercent / 100);
         router.post(invoices.store.url(), values, {
             onSuccess: () => setCreateOpen(false),
             onError: () => {},
@@ -88,7 +167,22 @@ export default function InvoicesIndex({ invoices: data, clients, pets: allPets, 
     function handleEditSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!editingInvoice) return;
-        const values = formToJson(e.currentTarget);
+        const form = e.currentTarget;
+        const formData = new FormData(form);
+        const values: Record<string, unknown> = {};
+        for (const [key, value] of formData) {
+            values[key] = value === '' ? null : value;
+        }
+        values.items = editItems.map((item) => ({
+            description: item.description,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            type: item.type,
+        }));
+        const subtotal = editItems.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+        values.subtotal = subtotal;
+        values.tax = editTaxPercent;
+        values.total = subtotal + (subtotal * editTaxPercent / 100);
         router.put(invoices.update.url(editingInvoice.id), values, {
             onSuccess: () => setEditingInvoice(null),
             onError: () => {},
@@ -153,22 +247,112 @@ export default function InvoicesIndex({ invoices: data, clients, pets: allPets, 
                                         </select>
                                         {errors.veterinarian_id && <p className="text-sm text-destructive">{errors.veterinarian_id}</p>}
                                     </div>
-                                    <div className="grid grid-cols-3 gap-4">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="subtotal">Subtotal</Label>
-                                            <Input id="subtotal" name="subtotal" type="number" step="0.01" min="0" required />
-                                            {errors.subtotal && <p className="text-sm text-destructive">{errors.subtotal}</p>}
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <Label>Line Items</Label>
+                                            <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                                                <Plus /> Add Item
+                                            </Button>
                                         </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="tax">Tax</Label>
-                                            <Input id="tax" name="tax" type="number" step="0.01" min="0" required />
-                                            {errors.tax && <p className="text-sm text-destructive">{errors.tax}</p>}
+                                        {items.length === 0 ? (
+                                            <p className="text-sm text-muted-foreground italic">No items added yet.</p>
+                                        ) : (
+                                            <div className="overflow-x-auto border rounded-md">
+                                                <table className="w-full text-sm">
+                                                    <thead>
+                                                        <tr className="border-b bg-muted/50">
+                                                            <th className="p-2 text-left font-medium">Description</th>
+                                                            <th className="p-2 text-left font-medium">Type</th>
+                                                            <th className="p-2 text-right font-medium">Qty</th>
+                                                            <th className="p-2 text-right font-medium">Price</th>
+                                                            <th className="p-2 text-right font-medium">Total</th>
+                                                            <th className="p-2 w-10"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {items.map((item, index) => (
+                                                            <tr key={item.key} className="border-b last:border-0">
+                                                                <td className="p-1">
+                                                                    <Input
+                                                                        value={item.description}
+                                                                        onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                                                        placeholder="Description"
+                                                                        className="h-8 text-xs"
+                                                                    />
+                                                                </td>
+                                                                <td className="p-1">
+                                                                    <select
+                                                                        value={item.type}
+                                                                        onChange={(e) => updateItem(index, 'type', e.target.value)}
+                                                                        className="border-input h-8 w-full rounded-md border bg-transparent px-2 text-xs"
+                                                                    >
+                                                                        <option value="service">Service</option>
+                                                                        <option value="product">Product</option>
+                                                                    </select>
+                                                                </td>
+                                                                <td className="p-1">
+                                                                    <Input
+                                                                        type="number"
+                                                                        min="1"
+                                                                        value={item.quantity}
+                                                                        onChange={(e) => updateItem(index, 'quantity', Math.max(1, Number(e.target.value)))}
+                                                                        className="h-8 text-xs text-right"
+                                                                    />
+                                                                </td>
+                                                                <td className="p-1">
+                                                                    <Input
+                                                                        type="number"
+                                                                        step="0.01"
+                                                                        min="0"
+                                                                        value={item.unit_price}
+                                                                        onChange={(e) => updateItem(index, 'unit_price', Math.max(0, Number(e.target.value)))}
+                                                                        className="h-8 text-xs text-right"
+                                                                    />
+                                                                </td>
+                                                                <td className="p-1 text-right text-xs font-medium">
+                                                                    ${(item.quantity * item.unit_price).toFixed(2)}
+                                                                </td>
+                                                                <td className="p-1 text-center">
+                                                                    <button type="button" onClick={() => removeItem(index)} className="text-destructive hover:text-destructive/80">
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-end">
+                                            <div className="w-48 space-y-1">
+                                                <div className="flex justify-between text-sm">
+                                                    <span>Subtotal:</span>
+                                                    <span>${items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0).toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-sm items-center gap-2">
+                                                    <span>Tax:</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <Input
+                                                            type="number"
+                                                            min="0"
+                                                            step="0.1"
+                                                            value={taxPercent}
+                                                            onChange={(e) => setTaxPercent(Math.max(0, Number(e.target.value)))}
+                                                            className="h-7 w-20 text-xs text-right"
+                                                        />
+                                                        <span className="text-xs text-muted-foreground">%</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-between text-sm font-semibold border-t pt-1">
+                                                    <span>Total:</span>
+                                                    <span>${(() => {
+                                                        const sub = items.reduce((s, item) => s + item.quantity * item.unit_price, 0);
+                                                        return (sub + sub * taxPercent / 100).toFixed(2);
+                                                    })()}</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="total">Total</Label>
-                                            <Input id="total" name="total" type="number" step="0.01" min="0" required />
-                                            {errors.total && <p className="text-sm text-destructive">{errors.total}</p>}
-                                        </div>
+                                        {errors.items && <p className="text-sm text-destructive">{errors.items}</p>}
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="grid gap-2">
@@ -269,22 +453,112 @@ export default function InvoicesIndex({ invoices: data, clients, pets: allPets, 
                                         </select>
                                         {errors.veterinarian_id && <p className="text-sm text-destructive">{errors.veterinarian_id}</p>}
                                     </div>
-                                    <div className="grid grid-cols-3 gap-4">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="edit-subtotal">Subtotal</Label>
-                                            <Input id="edit-subtotal" name="subtotal" type="number" step="0.01" min="0" defaultValue={editingInvoice.subtotal} required />
-                                            {errors.subtotal && <p className="text-sm text-destructive">{errors.subtotal}</p>}
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <Label>Line Items</Label>
+                                            <Button type="button" variant="outline" size="sm" onClick={addEditItem}>
+                                                <Plus /> Add Item
+                                            </Button>
                                         </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="edit-tax">Tax</Label>
-                                            <Input id="edit-tax" name="tax" type="number" step="0.01" min="0" defaultValue={editingInvoice.tax} required />
-                                            {errors.tax && <p className="text-sm text-destructive">{errors.tax}</p>}
+                                        {editItems.length === 0 ? (
+                                            <p className="text-sm text-muted-foreground italic">No items added yet.</p>
+                                        ) : (
+                                            <div className="overflow-x-auto border rounded-md">
+                                                <table className="w-full text-sm">
+                                                    <thead>
+                                                        <tr className="border-b bg-muted/50">
+                                                            <th className="p-2 text-left font-medium">Description</th>
+                                                            <th className="p-2 text-left font-medium">Type</th>
+                                                            <th className="p-2 text-right font-medium">Qty</th>
+                                                            <th className="p-2 text-right font-medium">Price</th>
+                                                            <th className="p-2 text-right font-medium">Total</th>
+                                                            <th className="p-2 w-10"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {editItems.map((item, index) => (
+                                                            <tr key={item.key} className="border-b last:border-0">
+                                                                <td className="p-1">
+                                                                    <Input
+                                                                        value={item.description}
+                                                                        onChange={(e) => updateEditItem(index, 'description', e.target.value)}
+                                                                        placeholder="Description"
+                                                                        className="h-8 text-xs"
+                                                                    />
+                                                                </td>
+                                                                <td className="p-1">
+                                                                    <select
+                                                                        value={item.type}
+                                                                        onChange={(e) => updateEditItem(index, 'type', e.target.value)}
+                                                                        className="border-input h-8 w-full rounded-md border bg-transparent px-2 text-xs"
+                                                                    >
+                                                                        <option value="service">Service</option>
+                                                                        <option value="product">Product</option>
+                                                                    </select>
+                                                                </td>
+                                                                <td className="p-1">
+                                                                    <Input
+                                                                        type="number"
+                                                                        min="1"
+                                                                        value={item.quantity}
+                                                                        onChange={(e) => updateEditItem(index, 'quantity', Math.max(1, Number(e.target.value)))}
+                                                                        className="h-8 text-xs text-right"
+                                                                    />
+                                                                </td>
+                                                                <td className="p-1">
+                                                                    <Input
+                                                                        type="number"
+                                                                        step="0.01"
+                                                                        min="0"
+                                                                        value={item.unit_price}
+                                                                        onChange={(e) => updateEditItem(index, 'unit_price', Math.max(0, Number(e.target.value)))}
+                                                                        className="h-8 text-xs text-right"
+                                                                    />
+                                                                </td>
+                                                                <td className="p-1 text-right text-xs font-medium">
+                                                                    ${(item.quantity * item.unit_price).toFixed(2)}
+                                                                </td>
+                                                                <td className="p-1 text-center">
+                                                                    <button type="button" onClick={() => removeEditItem(index)} className="text-destructive hover:text-destructive/80">
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-end">
+                                            <div className="w-48 space-y-1">
+                                                <div className="flex justify-between text-sm">
+                                                    <span>Subtotal:</span>
+                                                    <span>${editItems.reduce((sum, item) => sum + item.quantity * item.unit_price, 0).toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-sm items-center gap-2">
+                                                    <span>Tax:</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <Input
+                                                            type="number"
+                                                            min="0"
+                                                            step="0.1"
+                                                            value={editTaxPercent}
+                                                            onChange={(e) => setEditTaxPercent(Math.max(0, Number(e.target.value)))}
+                                                            className="h-7 w-20 text-xs text-right"
+                                                        />
+                                                        <span className="text-xs text-muted-foreground">%</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-between text-sm font-semibold border-t pt-1">
+                                                    <span>Total:</span>
+                                                    <span>${(() => {
+                                                        const sub = editItems.reduce((s, item) => s + item.quantity * item.unit_price, 0);
+                                                        return (sub + sub * editTaxPercent / 100).toFixed(2);
+                                                    })()}</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="edit-total">Total</Label>
-                                            <Input id="edit-total" name="total" type="number" step="0.01" min="0" defaultValue={editingInvoice.total} required />
-                                            {errors.total && <p className="text-sm text-destructive">{errors.total}</p>}
-                                        </div>
+                                        {errors.items && <p className="text-sm text-destructive">{errors.items}</p>}
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="grid gap-2">

@@ -54,7 +54,7 @@ class InventoryItemController extends Controller
         $this->authorize('inventory.view');
 
         return Inertia::render('inventory/show', [
-            'item' => $inventoryItem,
+            'item' => $inventoryItem->loadMissing('activity'),
         ]);
     }
 

@@ -42,6 +42,7 @@ interface Pet {
     weight: string | null;
     color: string | null;
     microchip_id: string | null;
+    photo: string | null;
     is_active: boolean;
     notes: string | null;
     client: Client;
@@ -79,6 +80,8 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
     const [editCustomSpeciesInput, setEditCustomSpeciesInput] = React.useState('');
     const [createDob, setCreateDob] = React.useState<Date | undefined>();
     const [editDob, setEditDob] = React.useState<Date | undefined>();
+    const [createPhoto, setCreatePhoto] = React.useState<File | null>(null);
+    const [editPhoto, setEditPhoto] = React.useState<File | null>(null);
     const { errors } = usePage().props;
 
     const commonSpecies = [
@@ -107,7 +110,10 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
 
     function handleCreateSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        const values = formToJson(e.currentTarget);
+        const values = formToJson(e.currentTarget) as Record<string, unknown>;
+        if (createPhoto) {
+            values.photo = createPhoto;
+        }
         router.post(pets.store.url(), values, {
             onSuccess: () => {
                 setCreateOpen(false);
@@ -115,6 +121,7 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
                 setCreateCustomSpecies(false);
                 setCreateCustomSpeciesInput('');
                 setCreateDob(undefined);
+                setCreatePhoto(null);
             },
             onError: () => {},
         });
@@ -123,9 +130,15 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
     function handleEditSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!editingPet) return;
-        const values = formToJson(e.currentTarget);
-        router.put(pets.update.url(editingPet.id), values, {
-            onSuccess: () => setEditingPet(null),
+        const values = formToJson(e.currentTarget) as Record<string, unknown>;
+        if (editPhoto) {
+            values.photo = editPhoto;
+        }
+        router.post(pets.update.url(editingPet.id), { ...values, _method: 'put' }, {
+            onSuccess: () => {
+                setEditingPet(null);
+                setEditPhoto(null);
+            },
             onError: () => {},
         });
     }
@@ -174,6 +187,7 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
                                 setCreateCustomSpecies(false);
                                 setCreateCustomSpeciesInput('');
                                 setCreateDob(undefined);
+                                setCreatePhoto(null);
                             }
                         }}>
                             <DialogTrigger asChild>
@@ -304,6 +318,18 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
                                             />
                                             {errors.notes && <p className="text-sm text-destructive">{errors.notes}</p>}
                                         </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="photo">Photo</Label>
+                                            <Input
+                                                id="photo"
+                                                name="photo"
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => setCreatePhoto(e.target.files?.[0] ?? null)}
+                                                className="cursor-pointer"
+                                            />
+                                            {errors.photo && <p className="text-sm text-destructive">{errors.photo}</p>}
+                                        </div>
                                     </div>
                                     <DialogFooter className="mt-4">
                                         <Button type="submit">
@@ -317,7 +343,7 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
                 </div>
 
                 {/* Edit Pet Dialog */}
-                <Dialog open={editingPet !== null} onOpenChange={(open) => { if (!open) setEditingPet(null); }}>
+                <Dialog open={editingPet !== null} onOpenChange={(open) => { if (!open) { setEditingPet(null); setEditPhoto(null); } }}>
                     <DialogContent className="sm:max-w-xl">
                         <DialogHeader>
                             <DialogTitle>Edit Pet</DialogTitle>
@@ -444,6 +470,25 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
                                             className="border-input placeholder:text-muted-foreground flex h-20 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] md:text-sm"
                                         />
                                         {errors.notes && <p className="text-sm text-destructive">{errors.notes}</p>}
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="edit-photo">Photo</Label>
+                                        {editingPet.photo && (
+                                            <img
+                                                src={`/storage/${editingPet.photo}`}
+                                                alt={editingPet.name}
+                                                className="h-20 w-20 rounded-md object-cover border"
+                                            />
+                                        )}
+                                        <Input
+                                            id="edit-photo"
+                                            name="photo"
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => setEditPhoto(e.target.files?.[0] ?? null)}
+                                            className="cursor-pointer"
+                                        />
+                                        {errors.photo && <p className="text-sm text-destructive">{errors.photo}</p>}
                                     </div>
                                 </div>
                                 <DialogFooter className="mt-4">

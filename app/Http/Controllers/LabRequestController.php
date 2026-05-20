@@ -13,6 +13,24 @@ use Inertia\Inertia;
 
 class LabRequestController extends Controller
 {
+    public function storeResult(Request $request, LabRequest $labRequest)
+    {
+        $this->authorize('lab-requests.update');
+
+        $validated = $request->validate([
+            'parameter' => 'required|string|max:255',
+            'value' => 'required|string|max:255',
+            'reference_range' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+        ]);
+
+        $labRequest->results()->create($validated);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Lab result added successfully.']);
+
+        return redirect()->back();
+    }
+
     public function index(Request $request)
     {
         $this->authorize('lab-requests.view-any');

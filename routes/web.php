@@ -65,10 +65,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('lab-requests', LabRequestController::class)->parameters([
         'lab-requests' => 'labRequest',
     ]);
+    Route::post('lab-requests/{labRequest}/results', [LabRequestController::class, 'storeResult'])->name('lab-requests.results.store');
     Route::patch('lab-requests/{labRequest}/restore', [LabRequestController::class, 'restore'])->name('lab-requests.restore')->withTrashed();
 
     Route::resource('surgeries', SurgeryController::class);
     Route::patch('surgeries/{surgery}/restore', [SurgeryController::class, 'restore'])->name('surgeries.restore')->withTrashed();
+    Route::post('surgeries/{surgery}/procedures', [SurgeryController::class, 'storeProcedure'])->name('surgeries.procedures.store');
 
     Route::get('notifications', [NotificationsController::class, 'index'])->name('notifications.index');
     Route::post('notifications/{id}/read', [NotificationsController::class, 'markAsRead'])->name('notifications.read');

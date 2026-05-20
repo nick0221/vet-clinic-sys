@@ -18,7 +18,7 @@ class InvoiceController extends Controller
     {
         $this->authorize('invoices.view-any');
 
-        $query = Invoice::with(['client', 'pet', 'veterinarian']);
+        $query = Invoice::with(['client', 'pet', 'veterinarian', 'items']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -48,6 +48,16 @@ class InvoiceController extends Controller
         $this->authorize('invoices.create');
 
         $data = $request->validated();
+        $items = $data['items'] ?? null;
+        unset($data['items']);
+
+        if ($items) {
+            $subtotal = collect($items)->sum(fn ($item) => $item['quantity'] * $item['unit_price']);
+            $taxAmount = $subtotal * (($data['tax'] ?? 0) / 100);
+            $data['subtotal'] = $subtotal;
+            $data['tax'] = $taxAmount;
+            $data['total'] = $subtotal + $taxAmount;
+        }
 
         if (! isset($data['invoice_number'])) {
             $lastInvoice = Invoice::whereYear('created_at', now()->year)
@@ -59,7 +69,19 @@ class InvoiceController extends Controller
             $data['invoice_number'] = 'INV-'.now()->format('Ym').'-'.str_pad($sequence, 4, '0', STR_PAD_LEFT);
         }
 
-        Invoice::create($data);
+        $invoice = Invoice::create($data);
+
+        if ($items) {
+            foreach ($items as $item) {
+                $invoice->items()->create([
+                    'description' => $item['description'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'type' => $item['type'],
+                    'total' => $item['quantity'] * $item['unit_price'],
+                ]);
+            }
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Invoice created successfully.']);
 
@@ -81,7 +103,31 @@ class InvoiceController extends Controller
     {
         $this->authorize('invoices.update');
 
-        $invoice->update($request->validated());
+        $data = $request->validated();
+        $items = $data['items'] ?? null;
+        unset($data['items']);
+
+        if ($items) {
+            $subtotal = collect($items)->sum(fn ($item) => $item['quantity'] * $item['unit_price']);
+            $taxAmount = $subtotal * (($data['tax'] ?? 0) / 100);
+            $data['subtotal'] = $subtotal;
+            $data['tax'] = $taxAmount;
+            $data['total'] = $subtotal + $taxAmount;
+
+            $invoice->items()->delete();
+
+            foreach ($items as $item) {
+                $invoice->items()->create([
+                    'description' => $item['description'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'type' => $item['type'],
+                    'total' => $item['quantity'] * $item['unit_price'],
+                ]);
+            }
+        }
+
+        $invoice->update($data);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Invoice updated successfully.']);
 
