@@ -14,6 +14,7 @@ use App\Http\Controllers\PetController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\SurgeryController;
 use App\Http\Controllers\VaccinationController;
+use App\Http\Controllers\VeterinarianController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -37,6 +38,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('vaccinations', VaccinationController::class);
     Route::patch('vaccinations/{vaccination}/restore', [VaccinationController::class, 'restore'])->name('vaccinations.restore')->withTrashed();
+
+    Route::resource('veterinarians', VeterinarianController::class)->only([
+        'index', 'store', 'show', 'update', 'destroy',
+    ]);
 
     Route::resource('prescriptions', PrescriptionController::class);
     Route::patch('prescriptions/{prescription}/restore', [PrescriptionController::class, 'restore'])->name('prescriptions.restore')->withTrashed();

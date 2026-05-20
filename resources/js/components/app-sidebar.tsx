@@ -10,6 +10,7 @@ import {
     Package,
     PawPrint,
     Pill,
+    Stethoscope,
     Syringe,
     Users,
 } from 'lucide-react';
@@ -38,6 +39,7 @@ import pets from '@/routes/pets';
 import prescriptions from '@/routes/prescriptions';
 import surgeries from '@/routes/surgeries';
 import vaccinations from '@/routes/vaccinations';
+import veterinarians from '@/routes/veterinarians';
 import type { NavGroup, NavItem } from '@/types';
 
 function can(permissions: string[], permission: string): boolean {
@@ -110,6 +112,14 @@ export function AppSidebar() {
         }
         if (labSurgeryItems.length > 0) {
             groups.push({ label: 'Lab & Surgery', items: labSurgeryItems });
+        }
+
+        const adminItems: NavItem[] = [];
+        if (can(permissions, 'veterinarians.view-any')) {
+            adminItems.push({ title: 'Veterinarians', href: veterinarians.index(), icon: Stethoscope });
+        }
+        if (adminItems.length > 0) {
+            groups.push({ label: 'Administration', items: adminItems });
         }
 
         return groups;

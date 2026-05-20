@@ -14,7 +14,7 @@ class RoleSeeder extends Seeder
     {
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $modules = ['clients', 'pets', 'appointments', 'medical-records', 'vaccinations', 'prescriptions', 'invoices', 'payments', 'inventory', 'lab-tests', 'lab-requests', 'surgeries'];
+        $modules = ['clients', 'pets', 'appointments', 'medical-records', 'vaccinations', 'prescriptions', 'invoices', 'payments', 'inventory', 'lab-tests', 'lab-requests', 'surgeries', 'veterinarians'];
 
         Permission::firstOrCreate(['name' => 'dashboard.view']);
         Permission::firstOrCreate(['name' => 'settings.view']);
@@ -43,6 +43,7 @@ class RoleSeeder extends Seeder
             'lab-tests.view-any', 'lab-tests.view',
             'lab-requests.view-any', 'lab-requests.view', 'lab-requests.create', 'lab-requests.update',
             'surgeries.view-any', 'surgeries.view', 'surgeries.create', 'surgeries.update',
+            'veterinarians.view-any', 'veterinarians.view',
         ]);
 
         $receptionist = Role::firstOrCreate(['name' => 'Receptionist']);
@@ -60,6 +61,7 @@ class RoleSeeder extends Seeder
             'lab-tests.view-any', 'lab-tests.view',
             'lab-requests.view-any', 'lab-requests.view',
             'surgeries.view-any', 'surgeries.view',
+            'veterinarians.view-any', 'veterinarians.view',
         ]);
 
         $assistant = Role::firstOrCreate(['name' => 'Assistant']);
@@ -77,6 +79,7 @@ class RoleSeeder extends Seeder
             'lab-tests.view-any', 'lab-tests.view',
             'lab-requests.view-any', 'lab-requests.view', 'lab-requests.update',
             'surgeries.view-any', 'surgeries.view', 'surgeries.update',
+            'veterinarians.view-any', 'veterinarians.view',
         ]);
 
         $petOwner = Role::firstOrCreate(['name' => 'Pet Owner']);
