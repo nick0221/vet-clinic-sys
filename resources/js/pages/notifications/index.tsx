@@ -42,7 +42,7 @@ export default function NotificationsIndex({
     ];
 
     const handleMarkAsRead = (id: string) => {
-        router.post(notificationsRoutes.read({ id: Number(id) }).url);
+        router.post(notificationsRoutes.read({ id }).url);
     };
 
     const handleMarkAllAsRead = () => {
