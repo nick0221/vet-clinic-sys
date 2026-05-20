@@ -65,7 +65,8 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function navigate(opts: Record<string, string | number | undefined | null>) {
-    router.get(appointments.index.url({ query: { ...opts, page: null } }), {}, { preserveState: true, preserveScroll: true });
+    const hasPage = 'page' in opts;
+    router.get(appointments.index.url({ query: hasPage ? opts : { ...opts, page: null } }), {}, { preserveState: true, preserveScroll: true });
 }
 
 export default function AppointmentsIndex({ appointments: data, veterinarians, pets: allPets, clients: allClients, filters, calendarCounts, calendarMonth, calendarYear }: Props) {
