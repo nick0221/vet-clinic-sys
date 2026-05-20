@@ -17,16 +17,17 @@ function Calendar({
             className={cn('p-3', className)}
             classNames={{
                 months: 'flex flex-col sm:flex-row gap-2',
-                month: 'flex flex-col gap-4',
-                caption: 'flex justify-center pt-1 relative items-center w-full',
+                month: 'relative flex flex-col gap-4',
+                month_caption: 'flex items-center justify-center mx-9',
                 caption_label: 'text-sm font-medium',
-                nav: 'flex items-center gap-1',
-                nav_button: cn(
+                button_previous: cn(
                     buttonVariants({ variant: 'outline' }),
-                    'size-7 bg-transparent p-0 opacity-50 hover:opacity-100',
+                    'absolute left-0 top-0 size-7 bg-transparent p-0 opacity-50 hover:opacity-100',
                 ),
-                nav_button_previous: 'absolute left-1',
-                nav_button_next: 'absolute right-1',
+                button_next: cn(
+                    buttonVariants({ variant: 'outline' }),
+                    'absolute right-0 top-0 size-7 bg-transparent p-0 opacity-50 hover:opacity-100',
+                ),
                 table: 'w-full border-collapse',
                 head_row: 'grid grid-cols-7',
                 head_cell: 'text-muted-foreground rounded-md w-8 font-normal text-[0.8rem] flex items-center justify-center',
@@ -60,6 +61,7 @@ function Calendar({
                         <ChevronRight className="size-4" {...props} />
                     ),
             }}
+            navLayout="around"
             {...props}
         />
     );
