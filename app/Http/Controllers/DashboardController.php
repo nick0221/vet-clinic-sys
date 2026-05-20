@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\InventoryItem;
 use App\Models\Invoice;
 use App\Models\LabRequest;
+use App\Models\Payment;
 use App\Models\Pet;
 use App\Models\Surgery;
 use App\Models\Vaccination;
@@ -31,8 +32,30 @@ class DashboardController extends Controller
         $pendingLabRequests = LabRequest::whereIn('status', ['pending', 'collected'])->count();
         $todaySurgeries = Surgery::whereDate('scheduled_date', today())->count();
 
+        $todayRevenue = Payment::whereDate('payment_date', today())
+            ->sum('amount');
+
+        $monthRevenue = Payment::whereMonth('payment_date', now()->month)
+            ->whereYear('payment_date', now()->year)
+            ->sum('amount');
+
+        $outstandingRevenue = Invoice::whereIn('status', ['pending', 'overdue'])
+            ->sum('total');
+
+        $overdueInvoices = Invoice::where('status', 'overdue')
+            ->orWhere(function ($q) {
+                $q->where('status', 'pending')
+                    ->where('due_date', '<', now());
+            })
+            ->count();
+
         $recentClients = Client::latest()->take(5)->get();
         $recentPets = Pet::with('client')->latest()->take(5)->get();
+        $todaySchedule = Appointment::with(['pet', 'client', 'veterinarian'])
+            ->whereDate('date_time', today())
+            ->orderBy('date_time')
+            ->get();
+
         $upcomingAppointments = Appointment::with(['pet', 'client', 'veterinarian'])
             ->where('date_time', '>=', now())
             ->orderBy('date_time')
@@ -49,10 +72,15 @@ class DashboardController extends Controller
                 'lowStockItems' => $lowStockItems,
                 'pendingLabRequests' => $pendingLabRequests,
                 'todaySurgeries' => $todaySurgeries,
+                'todayRevenue' => $todayRevenue,
+                'monthRevenue' => $monthRevenue,
+                'outstandingRevenue' => $outstandingRevenue,
+                'overdueInvoices' => $overdueInvoices,
             ],
             'recentClients' => $recentClients,
             'recentPets' => $recentPets,
             'upcomingAppointments' => $upcomingAppointments,
+            'todaySchedule' => $todaySchedule,
         ]);
     }
 }
