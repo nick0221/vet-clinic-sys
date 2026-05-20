@@ -48,12 +48,24 @@ class AppointmentController extends Controller
         $pets = Pet::with('client')->where('is_active', true)->get(['id', 'name', 'client_id']);
         $clients = Client::where('is_active', true)->get(['id', 'name']);
 
+        $calMonth = $request->integer('cal_month', now()->month);
+        $calYear = $request->integer('cal_year', now()->year);
+
+        $calendarCounts = Appointment::selectRaw('date(date_time) as date, count(*) as count')
+            ->whereYear('date_time', $calYear)
+            ->whereMonth('date_time', $calMonth)
+            ->groupBy('date')
+            ->pluck('count', 'date');
+
         return Inertia::render('appointments/index', [
             'appointments' => $appointments,
             'veterinarians' => $veterinarians,
             'pets' => $pets,
             'clients' => $clients,
             'filters' => $request->only(['status', 'date_from', 'date_to', 'search']),
+            'calendarCounts' => $calendarCounts,
+            'calendarMonth' => $calMonth,
+            'calendarYear' => $calYear,
         ]);
     }
 

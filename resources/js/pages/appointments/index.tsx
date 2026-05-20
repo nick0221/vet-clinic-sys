@@ -1,7 +1,7 @@
 import React from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 
-import { Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -47,6 +47,9 @@ interface Props {
     pets: Pet[];
     clients: Client[];
     filters: { status?: string; date_from?: string; date_to?: string; search?: string };
+    calendarCounts: Record<string, number>;
+    calendarMonth: number;
+    calendarYear: number;
 }
 
 const statusColors: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -58,11 +61,28 @@ const statusColors: Record<string, 'default' | 'secondary' | 'destructive' | 'ou
     no_show: 'destructive',
 };
 
-export default function AppointmentsIndex({ appointments: data, veterinarians, pets: allPets, clients: allClients, filters }: Props) {
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function navigate(opts: Record<string, string | number | undefined | null>) {
+    router.get(appointments.index.url({ query: { ...opts, page: null } }), {}, { preserveState: true, preserveScroll: true });
+}
+
+export default function AppointmentsIndex({ appointments: data, veterinarians, pets: allPets, clients: allClients, filters, calendarCounts, calendarMonth, calendarYear }: Props) {
     const [searchValue, setSearchValue] = React.useState(filters?.search ?? '');
     const [createOpen, setCreateOpen] = React.useState(false);
     const [editingAppointment, setEditingAppointment] = React.useState<AppointmentData | null>(null);
     const { errors } = usePage().props;
+
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10);
+
+    const firstDay = new Date(calendarYear, calendarMonth - 1, 1);
+    const lastDay = new Date(calendarYear, calendarMonth, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDow = firstDay.getDay();
+
+    const activeDate = filters?.date_from === filters?.date_to ? filters?.date_from : null;
 
     function formToJson(form: HTMLFormElement) {
         const data = new FormData(form);
@@ -93,17 +113,74 @@ export default function AppointmentsIndex({ appointments: data, veterinarians, p
     }
 
     function handleSearch() {
-        router.get(appointments.index.url({ query: { search: searchValue || null, page: null } }));
+        navigate({ search: searchValue || null, status: filters?.status, date_from: filters?.date_from, date_to: filters?.date_to, cal_month: calendarMonth, cal_year: calendarYear });
     }
 
     function handleKeyDown(e: React.KeyboardEvent) {
         if (e.key === 'Enter') handleSearch();
     }
 
-    function clearSearch() {
+    function clearFilters() {
         setSearchValue('');
-        router.get(appointments.index.url({ query: { search: null, page: null } }));
+        navigate({ search: null, status: null, date_from: null, date_to: null, cal_month: calendarMonth, cal_year: calendarYear });
     }
+
+    function goMonth(delta: number) {
+        let m = calendarMonth + delta;
+        let y = calendarYear;
+        if (m < 1) { m = 12; y--; }
+        if (m > 12) { m = 1; y++; }
+        navigate({ cal_month: m, cal_year: y, status: filters?.status, search: filters?.search, date_from: filters?.date_from, date_to: filters?.date_to });
+    }
+
+    function pickDate(dateStr: string) {
+        if (activeDate === dateStr) {
+            navigate({ date_from: null, date_to: null, status: filters?.status, search: filters?.search, cal_month: calendarMonth, cal_year: calendarYear });
+        } else {
+            navigate({ date_from: dateStr, date_to: dateStr, status: filters?.status, search: filters?.search, cal_month: calendarMonth, cal_year: calendarYear });
+        }
+    }
+
+    const weekRows: React.ReactNode[] = [];
+    let dayCells: React.ReactNode[] = [];
+    for (let i = 0; i < startDow; i++) {
+        dayCells.push(<td key={`pad-${i}`} className="p-1" />);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${calendarYear}-${String(calendarMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const count = calendarCounts[dateStr] ?? 0;
+        const isToday = dateStr === todayStr;
+        const isActive = activeDate === dateStr;
+
+        dayCells.push(
+            <td key={dateStr} className="p-0.5">
+                <button
+                    onClick={() => pickDate(dateStr)}
+                    className={`flex h-14 w-full flex-col items-center justify-center rounded-md text-xs transition-colors
+                        ${isActive ? 'bg-primary text-primary-foreground' : isToday ? 'ring-1 ring-inset ring-primary' : 'hover:bg-accent'}
+                        ${!count && !isActive ? 'text-muted-foreground' : ''}`}
+                >
+                    <span className={`text-sm leading-tight ${isActive ? 'font-bold' : 'font-medium'}`}>{d}</span>
+                    {count > 0 && (
+                        <span className={`mt-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold
+                            ${isActive ? 'bg-primary-foreground text-primary' : 'bg-primary/10 text-primary'}`}
+                        >
+                            {count}
+                        </span>
+                    )}
+                </button>
+            </td>
+        );
+        if ((startDow + d) % 7 === 0 || d === daysInMonth) {
+            while (dayCells.length % 7 !== 0) {
+                dayCells.push(<td key={`pad-end-${d}-${dayCells.length}`} className="p-1" />);
+            }
+            weekRows.push(<tr key={`week-${d}`} className="[&_td]:p-0.5">{dayCells}</tr>);
+            dayCells = [];
+        }
+    }
+
+    const hasFilters = filters?.search || filters?.status || filters?.date_from;
 
     return (
         <>
@@ -123,8 +200,8 @@ export default function AppointmentsIndex({ appointments: data, veterinarians, p
                             <Button variant="outline" size="sm" onClick={handleSearch}>
                                 <Search />
                             </Button>
-                            {filters?.search && (
-                                <Button variant="ghost" size="sm" onClick={clearSearch}>
+                            {hasFilters && (
+                                <Button variant="ghost" size="sm" onClick={clearFilters}>
                                     <X />
                                 </Button>
                             )}
@@ -215,6 +292,127 @@ export default function AppointmentsIndex({ appointments: data, veterinarians, p
                     </div>
                 </div>
 
+                <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-base">{MONTHS[calendarMonth - 1]} {calendarYear}</CardTitle>
+                                <div className="flex gap-1">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => goMonth(-1)}><ChevronLeft /></Button>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => goMonth(1)}><ChevronRight /></Button>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                            <table className="w-full table-fixed">
+                                <thead>
+                                    <tr>
+                                        {DAYS.map(d => <th key={d} className="pb-1 text-center text-xs font-medium text-muted-foreground">{d}</th>)}
+                                    </tr>
+                                </thead>
+                                <tbody>{weekRows}</tbody>
+                            </table>
+                        </CardContent>
+                    </Card>
+
+                    <div className="flex flex-col gap-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <select
+                                value={filters?.status ?? ''}
+                                onChange={(e) => navigate({ status: e.target.value || null, search: filters?.search, date_from: filters?.date_from, date_to: filters?.date_to, cal_month: calendarMonth, cal_year: calendarYear })}
+                                className="border-input flex h-9 w-40 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] md:text-sm"
+                            >
+                                <option value="">All statuses</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="no_show">No Show</option>
+                            </select>
+
+                            <div className="flex gap-2 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                    <span className="inline-block h-2 w-2 rounded-full bg-primary" />
+                                    {data.total} total
+                                </span>
+                                {activeDate && (
+                                    <span className="flex items-center gap-1">
+                                        <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
+                                        {activeDate}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>All Appointments</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {data.data.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground">No appointments found.</p>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm">
+                                            <thead>
+                                                <tr className="border-b text-left">
+                                                    <th className="pb-3 font-medium">Pet</th>
+                                                    <th className="pb-3 font-medium">Owner</th>
+                                                    <th className="pb-3 font-medium">Vet</th>
+                                                    <th className="pb-3 font-medium">Date & Time</th>
+                                                    <th className="pb-3 font-medium">Type</th>
+                                                    <th className="pb-3 font-medium">Status</th>
+                                                    <th className="pb-3 font-medium text-right">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {data.data.map((apt) => (
+                                                    <tr key={apt.id} className="border-b last:border-0">
+                                                        <td className="py-3">
+                                                            <Link href={appointments.show(apt.id)} className="font-medium hover:underline">
+                                                                {apt.pet.name}
+                                                            </Link>
+                                                        </td>
+                                                        <td className="py-3">{apt.client.name}</td>
+                                                        <td className="py-3 text-muted-foreground">{apt.veterinarian.name}</td>
+                                                        <td className="py-3">{formatDateTime(apt.date_time)}</td>
+                                                        <td className="py-3 capitalize">{apt.type.replace('_', ' ')}</td>
+                                                        <td className="py-3">
+                                                            <Badge variant={statusColors[apt.status] ?? 'outline'}>
+                                                                {apt.status.replace('_', ' ')}
+                                                            </Badge>
+                                                        </td>
+                                                        <td className="py-3 text-right">
+                                                            <div className="flex justify-end gap-2">
+                                                                <Button variant="ghost" size="sm" onClick={() => setEditingAppointment(apt)}>
+                                                                    <Pencil />
+                                                                </Button>
+                                                                <Button variant="ghost" size="sm" onClick={() => { if (confirm('Cancel this appointment?')) router.delete(appointments.destroy.url(apt.id)); }}>
+                                                                    <Trash2 className="text-destructive" />
+                                                                </Button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                                {data.last_page > 1 && (
+                                    <div className="mt-4 flex items-center justify-between">
+                                        <p className="text-sm text-muted-foreground">Showing {data.from} to {data.to} of {data.total}</p>
+                                        <div className="flex gap-2">
+                                            {data.current_page > 1 && <Button variant="outline" size="sm" onClick={() => navigate({ page: data.current_page - 1, search: searchValue || undefined, status: filters?.status, date_from: filters?.date_from, date_to: filters?.date_to, cal_month: calendarMonth, cal_year: calendarYear })}>Previous</Button>}
+                                            {data.current_page < data.last_page && <Button variant="outline" size="sm" onClick={() => navigate({ page: data.current_page + 1, search: searchValue || undefined, status: filters?.status, date_from: filters?.date_from, date_to: filters?.date_to, cal_month: calendarMonth, cal_year: calendarYear })}>Next</Button>}
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+
                 {/* Edit Appointment Dialog */}
                 <Dialog open={editingAppointment !== null} onOpenChange={(open) => { if (!open) setEditingAppointment(null); }}>
                     <DialogContent className="sm:max-w-xl">
@@ -292,72 +490,6 @@ export default function AppointmentsIndex({ appointments: data, veterinarians, p
                         )}
                     </DialogContent>
                 </Dialog>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>All Appointments</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {data.data.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No appointments found.</p>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="border-b text-left">
-                                            <th className="pb-3 font-medium">Pet</th>
-                                            <th className="pb-3 font-medium">Owner</th>
-                                            <th className="pb-3 font-medium">Vet</th>
-                                            <th className="pb-3 font-medium">Date & Time</th>
-                                            <th className="pb-3 font-medium">Type</th>
-                                            <th className="pb-3 font-medium">Status</th>
-                                            <th className="pb-3 font-medium text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {data.data.map((apt) => (
-                                            <tr key={apt.id} className="border-b last:border-0">
-                                                <td className="py-3">
-                                                    <Link href={appointments.show(apt.id)} className="font-medium hover:underline">
-                                                        {apt.pet.name}
-                                                    </Link>
-                                                </td>
-                                                <td className="py-3">{apt.client.name}</td>
-                                                <td className="py-3 text-muted-foreground">{apt.veterinarian.name}</td>
-                                                <td className="py-3">{formatDateTime(apt.date_time)}</td>
-                                                <td className="py-3 capitalize">{apt.type.replace('_', ' ')}</td>
-                                                <td className="py-3">
-                                                    <Badge variant={statusColors[apt.status] ?? 'outline'}>
-                                                        {apt.status.replace('_', ' ')}
-                                                    </Badge>
-                                                </td>
-                                                <td className="py-3 text-right">
-                                                    <div className="flex justify-end gap-2">
-                                                        <Button variant="ghost" size="sm" onClick={() => setEditingAppointment(apt)}>
-                                                            <Pencil />
-                                                        </Button>
-                                                        <Button variant="ghost" size="sm" onClick={() => { if (confirm('Cancel this appointment?')) router.delete(appointments.destroy.url(apt.id)); }}>
-                                                            <Trash2 className="text-destructive" />
-                                                        </Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                        {data.last_page > 1 && (
-                            <div className="mt-4 flex items-center justify-between">
-                                <p className="text-sm text-muted-foreground">Showing {data.from} to {data.to} of {data.total}</p>
-                                <div className="flex gap-2">
-                                    {data.current_page > 1 && <Button variant="outline" size="sm" onClick={() => router.get(appointments.index.url({ query: { page: data.current_page - 1, search: searchValue || undefined } }))}>Previous</Button>}
-                                    {data.current_page < data.last_page && <Button variant="outline" size="sm" onClick={() => router.get(appointments.index.url({ query: { page: data.current_page + 1, search: searchValue || undefined } }))}>Next</Button>}
-                                </div>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
             </div>
         </>
     );
