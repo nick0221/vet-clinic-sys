@@ -277,8 +277,8 @@ export default function VeterinariansIndex({ veterinarians: data, filters }: Pro
                             <div className="mt-4 flex items-center justify-between">
                                 <p className="text-sm text-muted-foreground">Showing {data.from} to {data.to} of {data.total}</p>
                                 <div className="flex gap-2">
-                                    {data.current_page > 1 && <Button variant="outline" size="sm" onClick={() => router.get(veterinarians.index.url({ query: { page: data.current_page - 1, search: search || undefined } }))}>Previous</Button>}
-                                    {data.current_page < data.last_page && <Button variant="outline" size="sm" onClick={() => router.get(veterinarians.index.url({ query: { page: data.current_page + 1, search: search || undefined } }))}>Next</Button>}
+                                    {data.current_page > 1 && <Button variant="outline" size="sm" onClick={() => router.get(veterinarians.index.url({ query: { page: data.current_page - 1, search: search || undefined } }), {}, { preserveState: true })}>Previous</Button>}
+                                    {data.current_page < data.last_page && <Button variant="outline" size="sm" onClick={() => router.get(veterinarians.index.url({ query: { page: data.current_page + 1, search: search || undefined } }), {}, { preserveState: true })}>Next</Button>}
                                 </div>
                             </div>
                         )}

@@ -277,8 +277,8 @@ export default function LabTestsIndex({ labTests: data, filters }: Props) {
                             <div className="mt-4 flex items-center justify-between">
                                 <p className="text-sm text-muted-foreground">Showing {data.from} to {data.to} of {data.total}</p>
                                 <div className="flex gap-2">
-                                    {data.current_page > 1 && <Button variant="outline" size="sm" onClick={() => router.get(labTests.index.url({ query: { page: data.current_page - 1, search: search || undefined, is_active: activeFilter || undefined } }))}>Previous</Button>}
-                                    {data.current_page < data.last_page && <Button variant="outline" size="sm" onClick={() => router.get(labTests.index.url({ query: { page: data.current_page + 1, search: search || undefined, is_active: activeFilter || undefined } }))}>Next</Button>}
+                                    {data.current_page > 1 && <Button variant="outline" size="sm" onClick={() => router.get(labTests.index.url({ query: { page: data.current_page - 1, search: search || undefined, is_active: activeFilter || undefined } }), {}, { preserveState: true })}>Previous</Button>}
+                                    {data.current_page < data.last_page && <Button variant="outline" size="sm" onClick={() => router.get(labTests.index.url({ query: { page: data.current_page + 1, search: search || undefined, is_active: activeFilter || undefined } }), {}, { preserveState: true })}>Next</Button>}
                                 </div>
                             </div>
                         )}
