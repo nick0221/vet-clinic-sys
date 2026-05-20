@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
 import surgeries from '@/routes/surgeries';
+import { formatDate } from '@/lib/utils';
 
 interface Pet { id: number; name: string }
 interface Veterinarian { id: number; name: string }
@@ -345,7 +346,7 @@ export default function SurgeriesIndex({ surgeries: data, pets, veterinarians, f
                                                 </td>
                                                 <td className="py-3">{s.pet.name}</td>
                                                 <td className="py-3 text-muted-foreground">{s.veterinarian.name}</td>
-                                                <td className="py-3">{s.scheduled_date}</td>
+                                                <td className="py-3">{formatDate(s.scheduled_date)}</td>
                                                 <td className="py-3">
                                                     <Badge variant="outline" className={statusColors[s.status] ?? ''}>
                                                         {s.status.replace('_', ' ')}

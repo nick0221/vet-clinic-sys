@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { dashboard } from '@/routes';
 import invoices from '@/routes/invoices';
+import { formatDate } from '@/lib/utils';
 
 interface ShowProps {
     payment: {
@@ -42,9 +43,9 @@ export default function PaymentShow({ payment }: ShowProps) {
                         <CardContent className="space-y-3">
                             <div><p className="text-xs text-muted-foreground">Amount</p><p className="text-sm font-semibold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(payment.amount))}</p></div>
                             <div><p className="text-xs text-muted-foreground">Method</p><p className="text-sm capitalize">{payment.payment_method.replace('_', ' ')}</p></div>
-                            <div><p className="text-xs text-muted-foreground">Payment Date</p><p className="text-sm">{payment.payment_date}</p></div>
+                            <div><p className="text-xs text-muted-foreground">Payment Date</p><p className="text-sm">{formatDate(payment.payment_date)}</p></div>
                             <div><p className="text-xs text-muted-foreground">Reference</p><p className="text-sm">{payment.reference ?? '—'}</p></div>
-                            <div><p className="text-xs text-muted-foreground">Created</p><p className="text-sm">{new Date(payment.created_at).toLocaleDateString()}</p></div>
+                            <div><p className="text-xs text-muted-foreground">Created</p><p className="text-sm">{formatDate(payment.created_at)}</p></div>
                             {payment.notes && <div><p className="text-xs text-muted-foreground">Notes</p><p className="text-sm whitespace-pre-wrap">{payment.notes}</p></div>}
                         </CardContent>
                     </Card>

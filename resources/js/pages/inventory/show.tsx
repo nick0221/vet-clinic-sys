@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
 import inventory from '@/routes/inventory';
+import { formatDate } from '@/lib/utils';
 
 interface ShowProps {
     item: {
@@ -48,7 +49,7 @@ export default function InventoryShow({ item }: ShowProps) {
                             <div><p className="text-xs text-muted-foreground">Category</p><p className="text-sm">{item.category ?? '—'}</p></div>
                             {item.description && <div><p className="text-xs text-muted-foreground">Description</p><p className="text-sm whitespace-pre-wrap">{item.description}</p></div>}
                             <div><p className="text-xs text-muted-foreground">Supplier</p><p className="text-sm">{item.supplier ?? '—'}</p></div>
-                            <div><p className="text-xs text-muted-foreground">Expiry Date</p><p className="text-sm">{item.expiry_date ?? '—'}</p></div>
+                            <div><p className="text-xs text-muted-foreground">Expiry Date</p><p className="text-sm">{formatDate(item.expiry_date)}</p></div>
                         </CardContent>
                     </Card>
                     <div className="space-y-4">

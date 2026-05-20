@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { dashboard } from '@/routes';
 import prescriptions from '@/routes/prescriptions';
+import { formatDate } from '@/lib/utils';
 
 interface ShowProps {
     prescription: {
@@ -45,8 +46,8 @@ export default function PrescriptionShow({ prescription }: ShowProps) {
                                 <div><p className="text-xs text-muted-foreground">Quantity</p><p className="text-sm">{prescription.quantity ?? '—'}</p></div>
                                 <div><p className="text-xs text-muted-foreground">Refills</p><p className="text-sm">{prescription.refills ?? '0'}</p></div>
                             </div>
-                            {prescription.start_date && <div><p className="text-xs text-muted-foreground">Start Date</p><p className="text-sm">{prescription.start_date}</p></div>}
-                            {prescription.end_date && <div><p className="text-xs text-muted-foreground">End Date</p><p className="text-sm">{prescription.end_date}</p></div>}
+                            {prescription.start_date && <div><p className="text-xs text-muted-foreground">Start Date</p><p className="text-sm">{formatDate(prescription.start_date)}</p></div>}
+                            {prescription.end_date && <div><p className="text-xs text-muted-foreground">End Date</p><p className="text-sm">{formatDate(prescription.end_date)}</p></div>}
                             {prescription.notes && <div><p className="text-xs text-muted-foreground">Notes</p><p className="text-sm whitespace-pre-wrap">{prescription.notes}</p></div>}
                         </CardContent>
                     </Card>

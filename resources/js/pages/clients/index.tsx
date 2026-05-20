@@ -306,7 +306,7 @@ export default function ClientsIndex({ clients: clientsData, filters }: { client
                                             variant="outline"
                                             size="sm"
                                             onClick={() =>
-                                                router.get(clients.index.url({ query: { page: clientsData.current_page - 1 } }))
+                                                router.get(clients.index.url({ query: { page: clientsData.current_page - 1, search: searchValue || undefined } }))
                                             }
                                         >
                                             Previous
@@ -317,7 +317,7 @@ export default function ClientsIndex({ clients: clientsData, filters }: { client
                                             variant="outline"
                                             size="sm"
                                             onClick={() =>
-                                                router.get(clients.index.url({ query: { page: clientsData.current_page + 1 } }))
+                                                router.get(clients.index.url({ query: { page: clientsData.current_page + 1, search: searchValue || undefined } }))
                                             }
                                         >
                                             Next

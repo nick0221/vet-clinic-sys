@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
 import invoices from '@/routes/invoices';
+import { formatDate } from '@/lib/utils';
 
 interface Client { id: number; name: string }
 interface Pet { id: number; name: string }
@@ -357,7 +358,7 @@ export default function InvoicesIndex({ invoices: data, clients, pets: allPets, 
                                                         {inv.status}
                                                     </Badge>
                                                 </td>
-                                                <td className="py-3">{inv.due_date ?? '—'}</td>
+                                                <td className="py-3">{formatDate(inv.due_date)}</td>
                                                 <td className="py-3 text-right">
                                                     <div className="flex justify-end gap-2">
                                                         <Link href={invoices.show(inv.id)}>

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
 import vaccinations from '@/routes/vaccinations';
+import { formatDate } from '@/lib/utils';
 
 interface ShowProps {
     vaccination: {
@@ -36,8 +37,8 @@ export default function VaccinationShow({ vaccination }: ShowProps) {
                             <div><p className="text-xs text-muted-foreground">Vaccine</p><p className="text-sm font-medium">{vaccination.vaccine_name}</p></div>
                             <div><p className="text-xs text-muted-foreground">Manufacturer</p><p className="text-sm">{vaccination.manufacturer ?? '—'}</p></div>
                             <div><p className="text-xs text-muted-foreground">Batch Number</p><p className="text-sm font-mono">{vaccination.batch_number ?? '—'}</p></div>
-                            <div><p className="text-xs text-muted-foreground">Date Administered</p><p className="text-sm">{vaccination.date_administered}</p></div>
-                            <div><p className="text-xs text-muted-foreground">Next Due Date</p><p className="text-sm">{vaccination.next_due_date ? <Badge variant={new Date(vaccination.next_due_date) < new Date() ? 'destructive' : 'default'}>{vaccination.next_due_date}</Badge> : '—'}</p></div>
+                            <div><p className="text-xs text-muted-foreground">Date Administered</p><p className="text-sm">{formatDate(vaccination.date_administered)}</p></div>
+                            <div><p className="text-xs text-muted-foreground">Next Due Date</p><p className="text-sm">{vaccination.next_due_date ? <Badge variant={new Date(vaccination.next_due_date) < new Date() ? 'destructive' : 'default'}>{formatDate(vaccination.next_due_date)}</Badge> : '—'}</p></div>
                             {vaccination.notes && <div><p className="text-xs text-muted-foreground">Notes</p><p className="text-sm whitespace-pre-wrap">{vaccination.notes}</p></div>}
                         </CardContent>
                     </Card>

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
 import pets from '@/routes/pets';
 import clientsRoute from '@/routes/clients';
+import { formatDate } from '@/lib/utils';
 
 interface PetShowProps {
     pet: {
@@ -68,7 +69,7 @@ export default function PetShow({ pet }: PetShowProps) {
                             </div>
                             <div>
                                 <p className="text-xs text-muted-foreground">Date of Birth</p>
-                                <p className="text-sm">{pet.date_of_birth ?? '—'}</p>
+                                <p className="text-sm">{formatDate(pet.date_of_birth)}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-muted-foreground">Weight</p>

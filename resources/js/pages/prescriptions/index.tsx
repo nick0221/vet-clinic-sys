@@ -373,8 +373,8 @@ export default function PrescriptionsIndex({ prescriptions: data, pets: allPets,
                             <div className="mt-4 flex items-center justify-between">
                                 <p className="text-sm text-muted-foreground">Showing {data.from} to {data.to} of {data.total}</p>
                                 <div className="flex gap-2">
-                                    {data.current_page > 1 && <Button variant="outline" size="sm" onClick={() => router.get(prescriptions.index.url({ query: { page: data.current_page - 1 } }))}>Previous</Button>}
-                                    {data.current_page < data.last_page && <Button variant="outline" size="sm" onClick={() => router.get(prescriptions.index.url({ query: { page: data.current_page + 1 } }))}>Next</Button>}
+                                    {data.current_page > 1 && <Button variant="outline" size="sm" onClick={() => router.get(prescriptions.index.url({ query: { page: data.current_page - 1, search: searchValue || undefined } }))}>Previous</Button>}
+                                    {data.current_page < data.last_page && <Button variant="outline" size="sm" onClick={() => router.get(prescriptions.index.url({ query: { page: data.current_page + 1, search: searchValue || undefined } }))}>Next</Button>}
                                 </div>
                             </div>
                         )}

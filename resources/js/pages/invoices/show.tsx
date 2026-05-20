@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
 import invoices from '@/routes/invoices';
 import payments from '@/routes/payments';
+import { formatDate } from '@/lib/utils';
 
 interface InvoiceItem {
     id: number;
@@ -72,8 +73,8 @@ export default function InvoiceShow({ invoice }: ShowProps) {
                         <CardHeader><CardTitle>Invoice Details</CardTitle></CardHeader>
                         <CardContent className="space-y-3">
                             <div><p className="text-xs text-muted-foreground">Invoice #</p><p className="text-sm font-medium">{invoice.invoice_number}</p></div>
-                            <div><p className="text-xs text-muted-foreground">Created</p><p className="text-sm">{new Date(invoice.created_at).toLocaleDateString()}</p></div>
-                            <div><p className="text-xs text-muted-foreground">Due Date</p><p className="text-sm">{invoice.due_date ?? '—'}</p></div>
+                            <div><p className="text-xs text-muted-foreground">Created</p><p className="text-sm">{formatDate(invoice.created_at)}</p></div>
+                            <div><p className="text-xs text-muted-foreground">Due Date</p><p className="text-sm">{formatDate(invoice.due_date)}</p></div>
                             <div><p className="text-xs text-muted-foreground">Subtotal</p><p className="text-sm">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(invoice.subtotal))}</p></div>
                             <div><p className="text-xs text-muted-foreground">Tax</p><p className="text-sm">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(invoice.tax))}</p></div>
                             <div><p className="text-xs text-muted-foreground">Total</p><p className="text-sm font-semibold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(invoice.total))}</p></div>
@@ -163,7 +164,7 @@ export default function InvoiceShow({ invoice }: ShowProps) {
                                     <tbody>
                                         {invoice.payments.map((payment) => (
                                             <tr key={payment.id} className="border-b last:border-0">
-                                                <td className="py-3">{payment.payment_date}</td>
+                                                <td className="py-3">{formatDate(payment.payment_date)}</td>
                                                 <td className="py-3 capitalize text-muted-foreground">{payment.payment_method.replace('_', ' ')}</td>
                                                 <td className="py-3 text-muted-foreground">{payment.reference ?? '—'}</td>
                                                 <td className="py-3 text-right font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(payment.amount))}</td>

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
 import labRequests from '@/routes/lab-requests';
 import pets from '@/routes/pets';
+import { formatDate } from '@/lib/utils';
 
 interface LabResult {
     id: number;
@@ -59,7 +60,7 @@ export default function LabRequestShow({ labRequest }: ShowProps) {
                             </div>
                             <div>
                                 <p className="text-xs text-muted-foreground">Request Date</p>
-                                <p className="text-sm">{labRequest.request_date}</p>
+                                <p className="text-sm">{formatDate(labRequest.request_date)}</p>
                             </div>
                             {labRequest.notes && (
                                 <div>

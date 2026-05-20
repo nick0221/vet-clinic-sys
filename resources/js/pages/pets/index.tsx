@@ -538,7 +538,7 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
                                             variant="outline"
                                             size="sm"
                                             onClick={() =>
-                                                router.get(pets.index.url({ query: { page: petsData.current_page - 1 } }))
+                                                router.get(pets.index.url({ query: { page: petsData.current_page - 1, search: searchValue || undefined } }))
                                             }
                                         >
                                             Previous
@@ -549,7 +549,7 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
                                             variant="outline"
                                             size="sm"
                                             onClick={() =>
-                                                router.get(pets.index.url({ query: { page: petsData.current_page + 1 } }))
+                                                router.get(pets.index.url({ query: { page: petsData.current_page + 1, search: searchValue || undefined } }))
                                             }
                                         >
                                             Next

@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
 import vaccinations from '@/routes/vaccinations';
+import { formatDate } from '@/lib/utils';
 
 interface Pet { id: number; name: string; client: { id: number; name: string } }
 interface Veterinarian { id: number; name: string }
@@ -288,11 +289,11 @@ export default function VaccinationsIndex({ vaccinations: data, pets: allPets, v
                                             <tr key={v.id} className="border-b last:border-0">
                                                 <td className="py-3 font-medium">{v.pet.name}</td>
                                                 <td className="py-3">{v.vaccine_name}</td>
-                                                <td className="py-3">{v.date_administered}</td>
+                                                <td className="py-3">{formatDate(v.date_administered)}</td>
                                                 <td className="py-3">
                                                     {v.next_due_date ? (
                                                         <Badge variant={new Date(v.next_due_date) < new Date() ? 'destructive' : 'outline'}>
-                                                            {v.next_due_date}
+                                                            {formatDate(v.next_due_date)}
                                                         </Badge>
                                                     ) : '—'}
                                                 </td>
@@ -317,8 +318,8 @@ export default function VaccinationsIndex({ vaccinations: data, pets: allPets, v
                             <div className="mt-4 flex items-center justify-between">
                                 <p className="text-sm text-muted-foreground">Showing {data.from} to {data.to} of {data.total}</p>
                                 <div className="flex gap-2">
-                                    {data.current_page > 1 && <Button variant="outline" size="sm" onClick={() => router.get(vaccinations.index.url({ query: { page: data.current_page - 1 } }))}>Previous</Button>}
-                                    {data.current_page < data.last_page && <Button variant="outline" size="sm" onClick={() => router.get(vaccinations.index.url({ query: { page: data.current_page + 1 } }))}>Next</Button>}
+                                    {data.current_page > 1 && <Button variant="outline" size="sm" onClick={() => router.get(vaccinations.index.url({ query: { page: data.current_page - 1, search: searchValue || undefined } }))}>Previous</Button>}
+                                    {data.current_page < data.last_page && <Button variant="outline" size="sm" onClick={() => router.get(vaccinations.index.url({ query: { page: data.current_page + 1, search: searchValue || undefined } }))}>Next</Button>}
                                 </div>
                             </div>
                         )}

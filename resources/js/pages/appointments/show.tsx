@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
 import appointments from '@/routes/appointments';
 import pets from '@/routes/pets';
+import { formatDateTime } from '@/lib/utils';
 
 interface ShowProps {
     appointment: {
@@ -42,7 +43,7 @@ export default function AppointmentShow({ appointment }: ShowProps) {
                     <Card>
                         <CardHeader><CardTitle>Appointment Details</CardTitle></CardHeader>
                         <CardContent className="space-y-3">
-                            <div><p className="text-xs text-muted-foreground">Date & Time</p><p className="text-sm">{new Date(appointment.date_time).toLocaleString()}</p></div>
+                            <div><p className="text-xs text-muted-foreground">Date & Time</p><p className="text-sm">{formatDateTime(appointment.date_time)}</p></div>
                             <div><p className="text-xs text-muted-foreground">Type</p><p className="text-sm capitalize">{appointment.type.replace('_', ' ')}</p></div>
                             <div><p className="text-xs text-muted-foreground">Duration</p><p className="text-sm">{appointment.duration} minutes</p></div>
                             <div><p className="text-xs text-muted-foreground">Reason</p><p className="text-sm whitespace-pre-wrap">{appointment.reason}</p></div>

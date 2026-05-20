@@ -16,6 +16,7 @@ import appointmentsRoute from '@/routes/appointments';
 import clients from '@/routes/clients';
 import invoices from '@/routes/invoices';
 import pets from '@/routes/pets';
+import { formatDate } from '@/lib/utils';
 
 interface Client {
     id: number;
@@ -168,7 +169,7 @@ export default function Dashboard({ stats, recentClients, recentPets, upcomingAp
                                                 {apt.pet.name}
                                             </Link>
                                             <p className="text-xs text-muted-foreground">
-                                                {apt.client.name} — {new Date(apt.date_time).toLocaleDateString()}
+                                                {apt.client.name} — {formatDate(apt.date_time)}
                                             </p>
                                         </div>
                                         <Badge variant={statusColor(apt.status)}>

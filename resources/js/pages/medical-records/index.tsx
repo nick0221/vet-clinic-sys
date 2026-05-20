@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
 import medicalRecords from '@/routes/medical-records';
+import { formatDate } from '@/lib/utils';
 
 interface Pet { id: number; name: string; client: { id: number; name: string } }
 interface Veterinarian { id: number; name: string }
@@ -345,7 +346,7 @@ export default function MedicalRecordsIndex({ records, pets: allPets, veterinari
                                                 <td className="py-3">{r.pet.name}</td>
                                                 <td className="py-3 text-muted-foreground">{r.pet.client.name}</td>
                                                 <td className="py-3 text-muted-foreground">{r.veterinarian.name}</td>
-                                                <td className="py-3">{r.visit_date}</td>
+                                                <td className="py-3">{formatDate(r.visit_date)}</td>
                                                 <td className="py-3 text-muted-foreground max-w-xs truncate">{r.assessment ?? '—'}</td>
                                                 <td className="py-3 text-right">
                                                     <div className="flex justify-end gap-2">
@@ -367,8 +368,8 @@ export default function MedicalRecordsIndex({ records, pets: allPets, veterinari
                             <div className="mt-4 flex items-center justify-between">
                                 <p className="text-sm text-muted-foreground">Showing {records.from} to {records.to} of {records.total}</p>
                                 <div className="flex gap-2">
-                                    {records.current_page > 1 && <Button variant="outline" size="sm" onClick={() => router.get(medicalRecords.index.url({ query: { page: records.current_page - 1 } }))}>Previous</Button>}
-                                    {records.current_page < records.last_page && <Button variant="outline" size="sm" onClick={() => router.get(medicalRecords.index.url({ query: { page: records.current_page + 1 } }))}>Next</Button>}
+                                    {records.current_page > 1 && <Button variant="outline" size="sm" onClick={() => router.get(medicalRecords.index.url({ query: { page: records.current_page - 1, search: searchValue || undefined } }))}>Previous</Button>}
+                                    {records.current_page < records.last_page && <Button variant="outline" size="sm" onClick={() => router.get(medicalRecords.index.url({ query: { page: records.current_page + 1, search: searchValue || undefined } }))}>Next</Button>}
                                 </div>
                             </div>
                         )}

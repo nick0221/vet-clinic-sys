@@ -1,7 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
 import { useState } from 'react';
+import { formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -108,7 +108,7 @@ export default function VeterinariansShow({ veterinarian }: Props) {
                                 <div>
                                     <dt className="text-sm text-muted-foreground">Start Date</dt>
                                     <dd className="text-sm font-medium">
-                                        {veterinarian.start_date ? format(new Date(veterinarian.start_date), 'MMM d, yyyy') : '—'}
+                                        {formatDate(veterinarian.start_date)}
                                     </dd>
                                 </div>
                                 <div>

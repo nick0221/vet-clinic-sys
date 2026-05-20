@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
 import surgeries from '@/routes/surgeries';
 import pets from '@/routes/pets';
+import { formatDate } from '@/lib/utils';
 
 interface SurgeryProcedure {
     id: number;
@@ -62,7 +63,7 @@ export default function SurgeryShow({ surgery }: ShowProps) {
                             )}
                             <div>
                                 <p className="text-xs text-muted-foreground">Scheduled Date</p>
-                                <p className="text-sm">{surgery.scheduled_date}</p>
+                                <p className="text-sm">{formatDate(surgery.scheduled_date)}</p>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>

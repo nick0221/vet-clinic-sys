@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
 import appointments from '@/routes/appointments';
+import { formatDateTime } from '@/lib/utils';
 
 interface Pet { id: number; name: string; client_id: number }
 interface Client { id: number; name: string }
@@ -323,7 +324,7 @@ export default function AppointmentsIndex({ appointments: data, veterinarians, p
                                                 </td>
                                                 <td className="py-3">{apt.client.name}</td>
                                                 <td className="py-3 text-muted-foreground">{apt.veterinarian.name}</td>
-                                                <td className="py-3">{new Date(apt.date_time).toLocaleString()}</td>
+                                                <td className="py-3">{formatDateTime(apt.date_time)}</td>
                                                 <td className="py-3 capitalize">{apt.type.replace('_', ' ')}</td>
                                                 <td className="py-3">
                                                     <Badge variant={statusColors[apt.status] ?? 'outline'}>
@@ -350,8 +351,8 @@ export default function AppointmentsIndex({ appointments: data, veterinarians, p
                             <div className="mt-4 flex items-center justify-between">
                                 <p className="text-sm text-muted-foreground">Showing {data.from} to {data.to} of {data.total}</p>
                                 <div className="flex gap-2">
-                                    {data.current_page > 1 && <Button variant="outline" size="sm" onClick={() => router.get(appointments.index.url({ query: { page: data.current_page - 1 } }))}>Previous</Button>}
-                                    {data.current_page < data.last_page && <Button variant="outline" size="sm" onClick={() => router.get(appointments.index.url({ query: { page: data.current_page + 1 } }))}>Next</Button>}
+                                    {data.current_page > 1 && <Button variant="outline" size="sm" onClick={() => router.get(appointments.index.url({ query: { page: data.current_page - 1, search: searchValue || undefined } }))}>Previous</Button>}
+                                    {data.current_page < data.last_page && <Button variant="outline" size="sm" onClick={() => router.get(appointments.index.url({ query: { page: data.current_page + 1, search: searchValue || undefined } }))}>Next</Button>}
                                 </div>
                             </div>
                         )}

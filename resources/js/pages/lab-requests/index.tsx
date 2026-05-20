@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { dashboard } from '@/routes';
 import labRequests from '@/routes/lab-requests';
+import { formatDate } from '@/lib/utils';
 
 interface Pet { id: number; name: string }
 interface Veterinarian { id: number; name: string }
@@ -320,7 +321,7 @@ export default function LabRequestsIndex({ labRequests: data, pets, veterinarian
                                                 </td>
                                                 <td className="py-3">{lr.labTest.name}</td>
                                                 <td className="py-3 text-muted-foreground">{lr.veterinarian.name}</td>
-                                                <td className="py-3">{lr.request_date}</td>
+                                                <td className="py-3">{formatDate(lr.request_date)}</td>
                                                 <td className="py-3">
                                                     <Badge variant="outline" className={statusColors[lr.status] ?? ''}>
                                                         {lr.status.replace('_', ' ')}

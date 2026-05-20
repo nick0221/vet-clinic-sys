@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { dashboard } from '@/routes';
 import medicalRecords from '@/routes/medical-records';
+import { formatDate } from '@/lib/utils';
 
 interface ShowProps {
     record: {
@@ -39,7 +40,7 @@ export default function MedicalRecordShow({ record }: ShowProps) {
                     <Card>
                         <CardHeader><CardTitle>SOAP Notes</CardTitle></CardHeader>
                         <CardContent className="space-y-4">
-                            <div><p className="text-xs font-medium text-muted-foreground">Date</p><p className="text-sm">{record.visit_date}</p></div>
+                            <div><p className="text-xs font-medium text-muted-foreground">Date</p><p className="text-sm">{formatDate(record.visit_date)}</p></div>
                             <div><p className="text-xs font-medium text-muted-foreground">Subjective</p><p className="text-sm whitespace-pre-wrap">{record.subjective ?? '—'}</p></div>
                             <div><p className="text-xs font-medium text-muted-foreground">Objective</p><p className="text-sm whitespace-pre-wrap">{record.objective ?? '—'}</p></div>
                             <div><p className="text-xs font-medium text-muted-foreground">Assessment</p><p className="text-sm whitespace-pre-wrap">{record.assessment ?? '—'}</p></div>
@@ -75,7 +76,7 @@ export default function MedicalRecordShow({ record }: ShowProps) {
                                         {record.vaccinations.map(v => (
                                             <div key={v.id} className="flex justify-between text-sm">
                                                 <span>{v.vaccine_name}</span>
-                                                <span className="text-muted-foreground">{v.date_administered}{v.next_due_date ? ` → ${v.next_due_date}` : ''}</span>
+                                                <span className="text-muted-foreground">{formatDate(v.date_administered)}{v.next_due_date ? ` → ${formatDate(v.next_due_date)}` : ''}</span>
                                             </div>
                                         ))}
                                     </div>
