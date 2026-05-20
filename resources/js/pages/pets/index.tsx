@@ -82,8 +82,7 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
     const { errors } = usePage().props;
 
     const commonSpecies = [
-        'Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Hamster',
-        'Guinea Pig', 'Turtle', 'Snake', 'Lizard', 'Horse', 'Ferret',
+        'Dog', 'Cat',
     ];
 
     React.useEffect(() => {
@@ -92,6 +91,7 @@ export default function PetsIndex({ pets: petsData, clients, filters }: PetsInde
             const isCommon = commonSpecies.map(s => s.toLowerCase()).includes(species.toLowerCase());
             setEditSpecies(species);
             setEditCustomSpecies(!isCommon);
+            setEditCustomSpeciesInput(!isCommon ? species : '');
             setEditDob(editingPet.date_of_birth ? new Date(editingPet.date_of_birth) : undefined);
         }
     }, [editingPet]);
