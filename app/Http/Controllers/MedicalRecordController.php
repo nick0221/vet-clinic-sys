@@ -62,7 +62,7 @@ class MedicalRecordController extends Controller
     {
         $this->authorize('medical-records.view');
 
-        $medicalRecord->load(['pet', 'veterinarian', 'appointment', 'vaccinations', 'prescriptions']);
+        $medicalRecord->load(['pet.client', 'veterinarian', 'appointment', 'vaccinations', 'prescriptions']);
 
         return Inertia::render('medical-records/show', [
             'record' => $medicalRecord,
