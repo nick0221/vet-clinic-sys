@@ -26,7 +26,7 @@ interface LabTest { id: number; name: string }
 interface LabRequestData {
     id: number;
     pet: Pet;
-    labTest: LabTest;
+    lab_test: LabTest;
     veterinarian: Veterinarian;
     request_date: string;
     status: string;
@@ -252,7 +252,7 @@ export default function LabRequestsIndex({ labRequests: data, pets, veterinarian
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="grid gap-2">
                                             <Label htmlFor="edit-lab_test_id">Lab Test</Label>
-                                            <select id="edit-lab_test_id" name="lab_test_id" required defaultValue={editingLabRequest.labTest.id} className="border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] md:text-sm">
+                                            <select id="edit-lab_test_id" name="lab_test_id" required defaultValue={editingLabRequest.lab_test.id} className="border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] md:text-sm">
                                                 <option value="">Select test...</option>
                                                 {labTests.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                                             </select>
@@ -319,7 +319,7 @@ export default function LabRequestsIndex({ labRequests: data, pets, veterinarian
                                                         {lr.pet.name}
                                                     </Link>
                                                 </td>
-                                                <td className="py-3">{lr.labTest.name}</td>
+                                                <td className="py-3">{lr.lab_test.name}</td>
                                                 <td className="py-3 text-muted-foreground">{lr.veterinarian.name}</td>
                                                 <td className="py-3">{formatDate(lr.request_date)}</td>
                                                 <td className="py-3">

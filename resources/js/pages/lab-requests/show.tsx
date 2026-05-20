@@ -24,7 +24,7 @@ interface ShowProps {
         notes: string | null;
         pet: { id: number; name: string; species: string };
         veterinarian: { id: number; name: string };
-        labTest: { id: number; name: string };
+        lab_test: { id: number; name: string };
         results: LabResult[];
     };
 }
@@ -56,7 +56,7 @@ export default function LabRequestShow({ labRequest }: ShowProps) {
                         <CardContent className="space-y-3">
                             <div>
                                 <p className="text-xs text-muted-foreground">Lab Test</p>
-                                <p className="text-sm font-medium">{labRequest.labTest.name}</p>
+                                <p className="text-sm font-medium">{labRequest.lab_test.name}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-muted-foreground">Request Date</p>
