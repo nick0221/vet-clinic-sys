@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as React from 'react';
 import { DayPicker } from 'react-day-picker';
 
@@ -20,6 +20,9 @@ function Calendar({
                 month: 'relative flex flex-col gap-4',
                 month_caption: 'flex items-center justify-center mx-9',
                 caption_label: 'text-sm font-medium',
+                dropdowns: 'flex items-center gap-1',
+                dropdown_root: 'relative inline-flex items-center',
+                dropdown: 'absolute inset-0 w-full opacity-0 cursor-pointer',
                 button_previous: cn(
                     buttonVariants({ variant: 'outline' }),
                     'absolute left-0 top-0 size-7 bg-transparent p-0 opacity-50 hover:opacity-100',
@@ -57,8 +60,10 @@ function Calendar({
                 Chevron: ({ orientation, ...props }) =>
                     orientation === 'left' ? (
                         <ChevronLeft className="size-4" {...props} />
-                    ) : (
+                    ) : orientation === 'right' ? (
                         <ChevronRight className="size-4" {...props} />
+                    ) : (
+                        <ChevronDown className="size-4" {...props} />
                     ),
             }}
             navLayout="around"

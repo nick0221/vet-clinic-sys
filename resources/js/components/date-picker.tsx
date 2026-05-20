@@ -53,6 +53,7 @@ export function DatePicker({ value, onChange, id, name, placeholder = 'Pick a da
                         }}
                         initialFocus
                         hideWeekdays
+                        captionLayout="dropdown"
                     />
                 </PopoverContent>
             </Popover>
